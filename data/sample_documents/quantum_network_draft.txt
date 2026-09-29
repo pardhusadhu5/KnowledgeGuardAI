@@ -1,0 +1,6 @@
+Next-Generation Infrastructure Exploratory Memo
+Date: 2023-11-05
+Author: Advanced Research Lab
+Topic: Infrastructure
+
+Exploratory review on post-quantum lattice cryptography. The working group has made no formal conclusions or recommendations. No standard has been decided or approved for organizational adoption. Further research is required.

@@ -1,0 +1,6 @@
+Runtime Environment Standards (Release 2024.1)
+Date: 2024-10-10
+Author: Developer Platform Engineering
+Topic: Runtime Environment
+
+Python 3.12 is supported across all internal application tiers. Container base images and deployment scripts are standardized on Python 3.12 LTS.

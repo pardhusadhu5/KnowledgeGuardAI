@@ -1,0 +1,6 @@
+Enterprise Service Architecture Update (Version 3.0)
+Date: 2026-02-15
+Author: Architecture Review Board
+Topic: API Architecture
+
+API v2 has been deprecated. API v3 is recommended. Beginning Q1 2026, all engineering teams must transition to API v3 which provides upgraded payload encryption and improved throughput. API v2 is no longer supported for new production deployments.

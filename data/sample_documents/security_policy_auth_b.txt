@@ -1,0 +1,6 @@
+Internal Security Standard: Zero-Trust Identity Mandate (Policy Beta)
+Date: 2025-08-10
+Author: Zero-Trust Governance Board
+Topic: Security & Authentication
+
+Authentication requires OAuth 2.0. In strict accordance with the Zero-Trust initiative, all inter-service communication must authenticate using short-lived OAuth 2.0 JWT bearer tokens obtained from the enterprise IdP. API keys are deprecated and disallowed.

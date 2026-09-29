@@ -1,0 +1,6 @@
+Internal Security Standard: Access Control Protocol (Policy Alpha)
+Date: 2025-06-01
+Author: Cloud Security Team Alpha
+Topic: Security & Authentication
+
+Authentication requires API keys. Every microservice client must pass a cryptographically signed x-api-key header for authentication and rate-limiting enforcement. No token exchange is permitted.

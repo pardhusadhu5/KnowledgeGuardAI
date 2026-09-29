@@ -1,0 +1,6 @@
+Enterprise Service Architecture Guidelines (Version 2.0)
+Date: 2024-03-01
+Author: Core Infrastructure Team
+Topic: API Architecture
+
+API v2 is recommended. All client integrations should establish communication channels using the v2 endpoints for maximum stability and enterprise compatibility. Standard rate limits and JSON payloads apply to all API v2 routes.
