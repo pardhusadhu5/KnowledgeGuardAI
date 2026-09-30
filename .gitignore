@@ -1,5 +1,6 @@
 # Environment Variables & Secrets
 .env
+backend/.env
 *.env.local
 
 # Python

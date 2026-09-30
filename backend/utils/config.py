@@ -49,7 +49,7 @@ class Settings(BaseSettings):
         return self.LLM_API_KEY
     
     class Config:
-        env_file = str(BASE_DIR / ".env")
+        env_file = (str(BASE_DIR / ".env"), str(BACKEND_DIR / ".env"))
         env_file_encoding = "utf-8"
         extra = "ignore"
 
