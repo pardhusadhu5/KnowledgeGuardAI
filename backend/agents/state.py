@@ -4,12 +4,12 @@ from typing_extensions import TypedDict
 
 class InvestigationState(TypedDict, total=False):
     claim: str
-    expanded_queries: List[str]
-    search_iteration: int
     retrieved_documents: List[Dict[str, Any]]
     evidence: List[Dict[str, Any]]
     source_metadata: List[Dict[str, Any]]
-    additional_search_required: bool
+    search_count: int
+    evidence_sufficient: bool
+    expanded_queries: List[str]
     comparison: str
     classification: str  # CURRENT, OUTDATED, CONFLICTING, UNCERTAIN
     reasoning: str

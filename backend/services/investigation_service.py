@@ -20,7 +20,7 @@ class InvestigationService:
         initial_state = {
             "claim": claim,
             "steps": [],
-            "search_iteration": 1,
+            "search_count": 1,
             "retrieved_documents": [],
             "evidence": []
         }

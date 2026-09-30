@@ -34,7 +34,7 @@ def understand_claim_node(state: InvestigationState) -> Dict[str, Any]:
 
     return {
         "expanded_queries": analysis["alternative_queries"],
-        "search_iteration": 1,
+        "search_count": 1,
         "steps": steps
     }
 
@@ -67,10 +67,8 @@ def retrieve_evidence_node(state: InvestigationState) -> Dict[str, Any]:
     hits = state.get("retrieved_documents", [])
     steps = state.get("steps", [])
     
-    # Filter and format evidence
     valid_evidence = []
     for hit in hits:
-        # Include chunks with meaningful relevance or content
         valid_evidence.append(hit)
     
     steps.append({
@@ -99,6 +97,8 @@ def inspect_metadata_node(state: InvestigationState) -> Dict[str, Any]:
             "version": ev.get("version", "1.0"),
             "date": ev.get("date", ""),
             "topic": ev.get("topic", "General"),
+            "document_id": ev.get("document_id"),
+            "filename": ev.get("filename", ""),
             "relevance_score": ev.get("relevance_score", 0.0)
         })
 
@@ -120,25 +120,25 @@ def inspect_metadata_node(state: InvestigationState) -> Dict[str, Any]:
 
 def evaluate_evidence_sufficiency_node(state: InvestigationState) -> Dict[str, Any]:
     evidence = state.get("evidence", [])
-    search_iteration = state.get("search_iteration", 1)
+    search_count = state.get("search_count", 1)
     steps = state.get("steps", [])
 
-    # Criteria: We need at least 1 relevant evidence passage
-    # If 0 hits and we have not iterated search yet, trigger expansion
-    insufficient = (len(evidence) == 0 and search_iteration < 2)
+    # Criteria: If fewer than 2 relevant pieces and search_count < 2, perform query expansion
+    is_sufficient = not (len(evidence) < 2 and search_count < 2)
 
     steps.append({
         "step_name": "evaluate_evidence_sufficiency",
-        "description": "Evaluated evidence completeness against investigative thresholds." if not insufficient else "Initial evidence insufficient. Initiating secondary query expansion.",
+        "description": "Evaluated evidence completeness against investigative thresholds." if is_sufficient else "Initial evidence insufficient. Initiating secondary query expansion.",
         "status": "completed",
         "details": {
-            "sufficient": not insufficient,
-            "iteration": search_iteration
+            "sufficient": is_sufficient,
+            "search_count": search_count,
+            "evidence_count": len(evidence)
         }
     })
 
     return {
-        "additional_search_required": insufficient,
+        "evidence_sufficient": is_sufficient,
         "steps": steps
     }
 
@@ -173,8 +173,8 @@ def search_again_node(state: InvestigationState) -> Dict[str, Any]:
     return {
         "retrieved_documents": existing_hits,
         "evidence": existing_hits,
-        "search_iteration": state.get("search_iteration", 1) + 1,
-        "additional_search_required": False,
+        "search_count": state.get("search_count", 1) + 1,
+        "evidence_sufficient": True,
         "steps": steps
     }
 
@@ -215,13 +215,13 @@ def send_structured_evidence_to_llm_node(state: InvestigationState) -> Dict[str,
         }
     })
 
-    # Call LLM client
+    # Call single generative LLM client
     llm_verdict = llm_client.reason_over_evidence(claim=claim, evidence_items=evidence)
 
     return {
         "classification": llm_verdict.get("classification", "UNCERTAIN"),
-        "reasoning": llm_verdict.get("explanation", ""),
-        "confidence": float(llm_verdict.get("confidence", 80.0)),
+        "reasoning": llm_verdict.get("reasoning", llm_verdict.get("explanation", "")),
+        "confidence": float(llm_verdict.get("confidence", 0.80)),
         "recommendation": llm_verdict.get("recommendation", "Review with domain experts."),
         "human_verification_required": bool(llm_verdict.get("human_verification_required", True)),
         "comparison": llm_verdict.get("comparison", state.get("comparison", "")),
@@ -282,7 +282,7 @@ def generate_recommendation_node(state: InvestigationState) -> Dict[str, Any]:
 
 # --- Routing Condition ---
 def sufficiency_router(state: InvestigationState) -> str:
-    if state.get("additional_search_required", False):
+    if not state.get("evidence_sufficient", True):
         return "search_again"
     return "compare_relevant_evidence"
 
