@@ -7,7 +7,7 @@ from backend.rag.embeddings import get_embedding_function
 
 logger = get_logger("vector_store")
 
-COLLECTION_NAME = "knowledge_guard_kb"
+COLLECTION_NAME = settings.COLLECTION_NAME
 
 
 class VectorStoreManager:

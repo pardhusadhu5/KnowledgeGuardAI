@@ -30,6 +30,7 @@ ENV/
 
 # ChromaDB & Local SQLite Databases
 data/chroma_db/
+data/chromadb/
 data/knowledgeguard.db
 data/uploads/*
 !data/uploads/.gitkeep
