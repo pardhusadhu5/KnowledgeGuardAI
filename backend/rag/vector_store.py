@@ -12,10 +12,22 @@ COLLECTION_NAME = settings.COLLECTION_NAME
 
 class VectorStoreManager:
     def __init__(self):
-        self.client = chromadb.PersistentClient(
-            path=settings.CHROMA_PERSIST_DIR,
-            settings=ChromaSettings(anonymized_telemetry=False)
-        )
+        if settings.CHROMA_SERVER_HOST:
+            headers = {"X-Chroma-Token": settings.CHROMA_AUTH_TOKEN} if settings.CHROMA_AUTH_TOKEN else None
+            self.client = chromadb.HttpClient(
+                host=settings.CHROMA_SERVER_HOST,
+                port=settings.CHROMA_SERVER_PORT,
+                ssl=settings.CHROMA_SERVER_SSL,
+                headers=headers,
+                settings=ChromaSettings(anonymized_telemetry=False)
+            )
+            logger.info(f"Initialized ChromaDB HttpClient connected to {settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}")
+        else:
+            self.client = chromadb.PersistentClient(
+                path=settings.CHROMA_PERSIST_DIR,
+                settings=ChromaSettings(anonymized_telemetry=False)
+            )
+            logger.info(f"Initialized ChromaDB PersistentClient at: {settings.CHROMA_PERSIST_DIR}")
         self.embedding_function = get_embedding_function()
         self._get_or_create_collection()
 

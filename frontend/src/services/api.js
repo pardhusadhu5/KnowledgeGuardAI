@@ -1,16 +1,40 @@
 import axios from 'axios';
 
-// The Vite dev server proxies /api to http://localhost:8000
-const API_BASE_URL = '/api';
+// Base API URL is configurable via VITE_API_BASE_URL in production (Render)
+// In local development, defaults to '/api' which is proxied to http://localhost:8000 by Vite
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 60000, // 60s timeout to allow for LLM and agent investigations
 });
 
+// Response interceptor for clear developer & user notifications on network or cold start issues
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      console.warn(
+        'KnowledgeGuard AI backend unreachable. If deployed on Render free tier, the web service may take ~30-50s to wake from hibernation.',
+        error.message
+      );
+    }
+    return Promise.reject(error);
+  }
+);
+
+
 export const api = {
+  // System Health
+  getHealth: async () => {
+    const res = await apiClient.get('/health');
+    return res.data;
+  },
+
   // Dashboard
   getDashboardStats: async () => {
     const res = await apiClient.get('/dashboard/stats');

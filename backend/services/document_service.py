@@ -34,7 +34,8 @@ class DocumentService:
         if not file_bytes:
             raise ValueError("Uploaded file is empty.")
 
-        # Save to disk
+        # Save to disk for text extraction
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         safe_filename = Path(filename).name
         dest_path = UPLOAD_DIR / safe_filename
         with open(dest_path, "wb") as f:

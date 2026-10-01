@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from backend.utils.config import settings
 from backend.utils.logger import get_logger
-from backend.database.db import init_db
+from backend.database.db import init_db, engine, is_sqlite
 from backend.api import api_router
 
 logger = get_logger("main")
@@ -14,10 +15,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+# Parse CORS origins from settings
+cors_origins_raw = settings.CORS_ORIGINS.strip()
+if cors_origins_raw == "*":
+    origins = ["*"]
+else:
+    origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
+if not origins:
+    origins = ["*"]
+
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,9 +37,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    logger.info("Initializing SQLite database tables...")
+    db_engine_name = "SQLite" if is_sqlite else "PostgreSQL"
+    logger.info(f"Initializing {db_engine_name} relational database...")
     init_db()
-    logger.info("KnowledgeGuard AI backend initialized successfully.")
+    logger.info(f"KnowledgeGuard AI backend initialized successfully. Environment: {settings.ENV}")
 
 
 # Mount API routers
@@ -37,14 +49,38 @@ app.include_router(api_router, prefix="/api")  # supports both direct and /api p
 
 
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 def health_check():
+    """Health check endpoint probing database, vector store, and LLM configuration."""
+    db_status = "connected"
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        logger.warning(f"Database health check probe error: {e}")
+        db_status = "error"
+
+    vs_status = "connected"
+    try:
+        from backend.rag.vector_store import vector_store
+        vector_store.collection.count()
+    except Exception as e:
+        logger.warning(f"Vector store health check probe error: {e}")
+        vs_status = "error"
+
+    effective_key = settings.get_effective_api_key()
+    llm_status = "configured" if bool(effective_key) else "unconfigured"
+
+    is_healthy = (db_status == "connected" and vs_status == "connected")
+
     return {
-        "status": "healthy",
+        "status": "healthy" if is_healthy else "degraded",
         "service": settings.PROJECT_NAME,
-        "subtitle": settings.PROJECT_SUBTITLE,
         "env": settings.ENV,
-        "database": "SQLite (Active)",
-        "vector_store": "ChromaDB (Active)"
+        "database": f"{'SQLite' if is_sqlite else 'PostgreSQL'} ({db_status})",
+        "vector_store": f"ChromaDB ({vs_status})",
+        "llm_provider": settings.LLM_PROVIDER,
+        "llm_status": llm_status
     }
 
 
@@ -61,4 +97,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
+

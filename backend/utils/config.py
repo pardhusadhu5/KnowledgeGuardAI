@@ -34,9 +34,20 @@ class Settings(BaseSettings):
     CHROMA_PERSIST_DIR: str = str(DEFAULT_CHROMA_DIR)
     COLLECTION_NAME: str = "knowledgeguard_documents"
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    # Optional Chroma HttpClient / Cloud settings for production
+    CHROMA_SERVER_HOST: str = ""
+    CHROMA_SERVER_PORT: int = 8000
+    CHROMA_SERVER_SSL: bool = False
+    CHROMA_AUTH_TOKEN: str = ""
     
     # Relational Database
     DATABASE_URL: str = f"sqlite:///{SQLITE_DB_PATH}"
+
+    # Server & Networking
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    DEBUG: bool = False
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     def get_effective_api_key(self) -> str:
         prov = self.LLM_PROVIDER.lower()

@@ -72,16 +72,18 @@ Rather than treating retrieved knowledge as absolute truth, KnowledgeGuard AI sy
 ---
 
 ## 4. Technologies Used
-* **Frontend**: React 19, Vite, Tailwind CSS v4, Lucide React, Axios.
-* **Backend**: Python 3.12+, FastAPI, Uvicorn, Pydantic v2.
-* **Agent Framework**: LangGraph, LangChain Core.
-* **Vector Database**: ChromaDB (persistent vector store).
+* **Frontend**: React 19, Vite, Tailwind CSS v4, Lucide React, Axios (Render Static Site).
+* **Backend**: Python 3.12+, FastAPI, Uvicorn, Pydantic v2 (Render Web Service).
+* **Agent Framework**: LangGraph, LangChain Core (10-node state machine workflow).
+* **Vector Database**: ChromaDB (Persistent Disk volume / HttpClient).
 * **Embeddings**: ChromaDB default embedding model (`all-MiniLM-L6-v2`) with zero-dependency local embedding fallback.
-* **Relational Database**: SQLite via SQLAlchemy ORM.
+* **Relational Database**: PostgreSQL via SQLAlchemy ORM (with seamless SQLite fallback for local development).
 * **Document Processing**: `pypdf` for PDF parsing and recursive text chunking.
-* **LLM Engine**: OpenAI / Groq API client with integrated local semantic inference engine for 100% resilient offline grading.
+* **LLM Engine**: Groq API (`openai/gpt-oss-120b`) / Gemini / OpenAI client with integrated local semantic inference fallback.
+* **Production Deployment**: Render (Full Blueprint via `render.yaml` & manual instructions in `DEPLOYMENT.md`).
 
 ---
+
 
 ## 5. Project Structure
 
@@ -203,6 +205,22 @@ Final Result: ALL TESTS PASSED
 ```
 
 ---
+
+## 9.5. Production Deployment (Render + PostgreSQL + ChromaDB)
+
+KnowledgeGuard AI is production-ready for deployment on **Render**:
+
+* **Frontend**: Render Static Site (React 19 + Vite + Tailwind CSS v4)
+* **Backend**: Render Web Service (FastAPI + LangGraph)
+* **Relational Database**: Managed PostgreSQL on Render or Neon (automatic schema creation & migration via SQLAlchemy)
+* **Vector Database**: ChromaDB attached via Render Persistent Disk volume (`/var/data/chromadb`) or Chroma HttpClient
+* **LLM Reasoning**: Centralized Groq API (`openai/gpt-oss-120b`)
+* **1-Click Blueprint**: Fully declared in [`render.yaml`](file:///c:/Users/pardhu/Downloads/FAI_PROJECT_2NDYEAR_TERM1/render.yaml)
+
+For the complete step-by-step setup walkthrough, environment variable reference, and troubleshooting tips, see the **[Production Deployment Manual](file:///c:/Users/pardhu/Downloads/FAI_PROJECT_2NDYEAR_TERM1/DEPLOYMENT.md)**.
+
+---
+
 
 ## 10. Demonstration Guide (3–5 Minute Presentation)
 1. **Open Dashboard (`http://localhost:5173`)**:
