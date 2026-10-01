@@ -1,0 +1,248 @@
+[
+  {
+    "id": "KG-001",
+    "claim": "API v2 is recommended for production services.",
+    "expected_verdict": "OUTDATED",
+    "topic": "API Architecture",
+    "evidence_documents": [
+      "api_v2_documentation.txt",
+      "api_v3_migration_notice.txt"
+    ],
+    "reason": "The 2026 Architecture Review Board notice explicitly deprecates API v2 in favor of API v3."
+  },
+  {
+    "id": "KG-002",
+    "claim": "All new client integrations should establish communication channels using API v2 endpoints.",
+    "expected_verdict": "OUTDATED",
+    "topic": "API Architecture",
+    "evidence_documents": [
+      "api_v2_documentation.txt",
+      "api_v3_migration_notice.txt"
+    ],
+    "reason": "API v2 is no longer supported for new production deployments as per Release 3.0."
+  },
+  {
+    "id": "KG-003",
+    "claim": "MySQL 5.7 is the default relational database engine for transactional services.",
+    "expected_verdict": "OUTDATED",
+    "topic": "Database & Storage",
+    "evidence_documents": [
+      "database_standard_2023.txt",
+      "database_migration_policy_2026.txt"
+    ],
+    "reason": "The 2026 Enterprise Database Architecture Update specifies that MySQL 5.7 reached EOL and PostgreSQL 16 is mandatory."
+  },
+  {
+    "id": "KG-004",
+    "claim": "New transactional microservices should provision MySQL 5.7 database instances.",
+    "expected_verdict": "OUTDATED",
+    "topic": "Database & Storage",
+    "evidence_documents": [
+      "database_standard_2023.txt",
+      "database_migration_policy_2026.txt"
+    ],
+    "reason": "New transactional services are explicitly forbidden from provisioning MySQL instances in the 2026 policy."
+  },
+  {
+    "id": "KG-005",
+    "claim": "Inter-service authentication must be performed using static API keys passed in x-api-key header.",
+    "expected_verdict": "OUTDATED",
+    "topic": "Security & Authentication",
+    "evidence_documents": [
+      "security_policy_auth_a.txt",
+      "security_policy_auth_b.txt"
+    ],
+    "reason": "Policy Beta (Zero-Trust Identity Mandate) supersedes static API keys, declaring them deprecated and disallowed."
+  },
+  {
+    "id": "KG-006",
+    "claim": "Standalone Docker host daemons are standard for deploying production services.",
+    "expected_verdict": "OUTDATED",
+    "topic": "DevOps & Infrastructure",
+    "evidence_documents": [
+      "container_orchestration_standard_2026.txt"
+    ],
+    "reason": "The 2026 platform standard dictates Kubernetes v1.29 and specifies that standalone Docker daemons are not permitted in production."
+  },
+  {
+    "id": "KG-007",
+    "claim": "Authentication requires API keys, whereas other internal standards mandate OAuth 2.0 JWT tokens.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Security & Authentication",
+    "evidence_documents": [
+      "security_policy_auth_a.txt",
+      "security_policy_auth_b.txt"
+    ],
+    "reason": "Policy Alpha strictly forbids token exchange and requires API keys, while Policy Beta disallows API keys and mandates OAuth 2.0."
+  },
+  {
+    "id": "KG-008",
+    "claim": "Developers can authenticate using either API keys or OAuth 2.0 bearer tokens.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Security & Authentication",
+    "evidence_documents": [
+      "security_policy_auth_a.txt",
+      "security_policy_auth_b.txt"
+    ],
+    "reason": "Policy Alpha allows only API keys while Policy Beta allows only OAuth 2.0, presenting directly conflicting requirements."
+  },
+  {
+    "id": "KG-009",
+    "claim": "Web session inactivity timeout is strictly enforced at 15 minutes across all corporate portals.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Session Management",
+    "evidence_documents": [
+      "session_timeout_security_sec.txt",
+      "session_timeout_operations_ops.txt"
+    ],
+    "reason": "Cyber Defense Directive enforces 15 minutes with no extension, while Portal Operations standard configures 30 minutes for dashboards."
+  },
+  {
+    "id": "KG-010",
+    "claim": "The corporate standard session timeout duration is 30 minutes of continuous inactivity.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Session Management",
+    "evidence_documents": [
+      "session_timeout_security_sec.txt",
+      "session_timeout_operations_ops.txt"
+    ],
+    "reason": "Operations standard specifies 30 minutes, directly conflicting with the Cyber Defense Directive mandating 15-minute termination."
+  },
+  {
+    "id": "KG-011",
+    "claim": "Operational extensions beyond 15 minutes are permitted for dashboard session inactivity.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Session Management",
+    "evidence_documents": [
+      "session_timeout_security_sec.txt",
+      "session_timeout_operations_ops.txt"
+    ],
+    "reason": "Security policy states no operational extension beyond 15 minutes is permitted, while Operations manual permits 30-minute keep-alive tokens."
+  },
+  {
+    "id": "KG-012",
+    "claim": "Microservice communication permits token exchange rather than static API keys.",
+    "expected_verdict": "CONFLICTING",
+    "topic": "Security & Authentication",
+    "evidence_documents": [
+      "security_policy_auth_a.txt",
+      "security_policy_auth_b.txt"
+    ],
+    "reason": "Policy Alpha explicitly states 'No token exchange is permitted' while Policy Beta mandates short-lived JWT token exchange."
+  },
+  {
+    "id": "KG-013",
+    "claim": "Python 3.12 is supported across internal application tiers.",
+    "expected_verdict": "CURRENT",
+    "topic": "Runtime Environment",
+    "evidence_documents": [
+      "python_support_matrix_2024.txt",
+      "python_support_update_2026.txt"
+    ],
+    "reason": "Both 2024 and 2026 runtime standards explicitly confirm Python 3.12 support and modernization."
+  },
+  {
+    "id": "KG-014",
+    "claim": "All core microservices and serverless runtimes are certified and supported under Python 3.12.",
+    "expected_verdict": "CURRENT",
+    "topic": "Runtime Environment",
+    "evidence_documents": [
+      "python_support_update_2026.txt"
+    ],
+    "reason": "The 2026 Runtime Environment Modernization Report confirms Python 3.12 long-term stability assurance."
+  },
+  {
+    "id": "KG-015",
+    "claim": "API v3 is recommended for all engineering teams and new production deployments in 2026.",
+    "expected_verdict": "CURRENT",
+    "topic": "API Architecture",
+    "evidence_documents": [
+      "api_v3_migration_notice.txt"
+    ],
+    "reason": "The 2026 Architecture Review Board document designates API v3 as the official recommended version."
+  },
+  {
+    "id": "KG-016",
+    "claim": "PostgreSQL 16 is the mandatory enterprise database standard for transactional workloads.",
+    "expected_verdict": "CURRENT",
+    "topic": "Database & Storage",
+    "evidence_documents": [
+      "database_migration_policy_2026.txt"
+    ],
+    "reason": "The 2026 Database Architecture Update mandates PostgreSQL 16 for all active workloads."
+  },
+  {
+    "id": "KG-017",
+    "claim": "Kubernetes v1.29 is the approved enterprise container orchestration platform.",
+    "expected_verdict": "CURRENT",
+    "topic": "DevOps & Infrastructure",
+    "evidence_documents": [
+      "container_orchestration_standard_2026.txt"
+    ],
+    "reason": "The 2026 Cloud Native Platform document explicitly approves Kubernetes v1.29."
+  },
+  {
+    "id": "KG-018",
+    "claim": "Daily automated database snapshots and cloud backups must be retained for 30 calendar days.",
+    "expected_verdict": "CURRENT",
+    "topic": "Cloud Operations",
+    "evidence_documents": [
+      "cloud_backup_retention_policy_2026.txt"
+    ],
+    "reason": "The 2026 Data Governance Policy specifies 30-day retention in geo-redundant storage."
+  },
+  {
+    "id": "KG-019",
+    "claim": "API v2 supports TLS 1.0 encryption protocol.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "API Architecture",
+    "evidence_documents": [
+      "api_v2_documentation.txt"
+    ],
+    "reason": "The knowledge base documents API v2 features and deprecation, but makes no mention of TLS 1.0 protocol support."
+  },
+  {
+    "id": "KG-020",
+    "claim": "The enterprise standard for post-quantum lattice cryptography has been approved for production adoption.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "Infrastructure",
+    "evidence_documents": [
+      "quantum_network_draft.txt"
+    ],
+    "reason": "The exploratory memo explicitly states that no standard has been decided or approved and research is ongoing."
+  },
+  {
+    "id": "KG-021",
+    "claim": "All backend microservices must be implemented using Rust 1.75 compiler toolchain.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "Programming Languages",
+    "evidence_documents": [],
+    "reason": "No documentation exists in the knowledge base establishing Rust compiler requirements or standards."
+  },
+  {
+    "id": "KG-022",
+    "claim": "Redis cluster instances are mandated as the primary distributed cache layer.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "Caching & Memory",
+    "evidence_documents": [],
+    "reason": "The indexed knowledge base contains no architectural guidelines regarding Redis caching or caching layers."
+  },
+  {
+    "id": "KG-023",
+    "claim": "Internal GraphQL federation gateways enforce a global 500ms query timeout limit.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "API Architecture",
+    "evidence_documents": [],
+    "reason": "The knowledge base discusses REST API v2 and v3 but does not contain GraphQL federation or timeout specifications."
+  },
+  {
+    "id": "KG-024",
+    "claim": "Automated disaster recovery failover to secondary cloud region occurs within 45 seconds.",
+    "expected_verdict": "UNCERTAIN",
+    "topic": "Disaster Recovery",
+    "evidence_documents": [
+      "cloud_backup_retention_policy_2026.txt"
+    ],
+    "reason": "The cloud backup policy defines retention periods (30 days), but specifies no RTO/RPO failover duration in seconds."
+  }
+]

@@ -5,6 +5,7 @@ import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import InvestigatePage from './pages/InvestigatePage';
 import HistoryPage from './pages/HistoryPage';
 import AboutPage from './pages/AboutPage';
+import EvaluationPage from './pages/EvaluationPage';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -35,6 +36,7 @@ export function App() {
               {activeTab === 'knowledge-base' && 'Knowledge Base Management'}
               {activeTab === 'investigate' && 'Agentic Investigation Console'}
               {activeTab === 'history' && 'Audit History & Results'}
+              {activeTab === 'evaluation' && 'Automated Evaluation & Benchmarks'}
               {activeTab === 'about' && 'System Architecture & Syllabus'}
             </h2>
           </div>
@@ -71,6 +73,10 @@ export function App() {
 
           {activeTab === 'history' && (
             <HistoryPage />
+          )}
+
+          {activeTab === 'evaluation' && (
+            <EvaluationPage />
           )}
 
           {activeTab === 'about' && (

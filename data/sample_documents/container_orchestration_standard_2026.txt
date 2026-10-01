@@ -1,0 +1,6 @@
+Cloud Native Platform Infrastructure Standard (Release 2026.1)
+Date: 2026-02-01
+Author: Cloud Native Platform Team
+Topic: DevOps & Infrastructure
+
+Kubernetes v1.29 is the approved enterprise container orchestration platform. All production microservices must be packaged as OCI-compliant container images and deployed via GitOps on standardized Kubernetes clusters. Standalone Docker host daemons are not permitted in production.

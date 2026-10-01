@@ -7,7 +7,8 @@ import {
   History, 
   Info,
   Cpu,
-  Layers
+  Layers,
+  Activity
 } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -16,6 +17,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'knowledge-base', label: 'Knowledge Base', icon: Database },
     { id: 'investigate', label: 'Investigate', icon: SearchCode },
     { id: 'history', label: 'Investigation History', icon: History },
+    { id: 'evaluation', label: 'Evaluation & Benchmarks', icon: Activity },
     { id: 'about', label: 'About & Syllabus', icon: Info },
   ];
 

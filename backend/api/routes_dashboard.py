@@ -59,6 +59,30 @@ def seed_sample_documents(db: Session = Depends(get_db)):
                 version = "3.0"
                 date = "2026-02-15"
                 topic = "API Architecture"
+            elif "database" in name:
+                topic = "Database & Storage"
+                if "2026" in name or "migration" in name:
+                    version = "3.1"
+                    date = "2026-01-10"
+                else:
+                    version = "1.0"
+                    date = "2023-04-15"
+            elif "session" in name or "timeout" in name:
+                topic = "Session Management"
+                if "sec" in name:
+                    version = "Sec-Policy-4"
+                    date = "2025-09-01"
+                else:
+                    version = "Ops-Standard-2"
+                    date = "2025-09-15"
+            elif "container" in name or "k8s" in name:
+                topic = "DevOps & Infrastructure"
+                version = "2026.1"
+                date = "2026-02-01"
+            elif "backup" in name or "retention" in name:
+                topic = "Cloud Operations"
+                version = "2.4"
+                date = "2026-01-05"
             elif "python" in name:
                 topic = "Runtime Environment"
                 if "update" in name or "2026" in name:

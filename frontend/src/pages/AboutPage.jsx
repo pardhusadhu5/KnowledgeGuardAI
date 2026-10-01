@@ -205,6 +205,78 @@ export const AboutPage = () => {
           ))}
         </div>
       </div>
+
+      {/* System Limitations & Reliability (Requirement 11) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+        <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider font-mono">
+          <AlertTriangle className="w-5 h-5" />
+          <span>System Limitations & Reliability Considerations</span>
+        </div>
+        <p className="text-xs text-slate-400 leading-relaxed font-sans">
+          KnowledgeGuard AI is designed as an agentic verification layer, not an infallible oracle. Real-world deployment must acknowledge key engineering and statistical limitations:
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">1.</span> Retrieval & Terminology Bounds
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              Dense vector similarity search may miss critical evidence if enterprise documents utilize unindexed jargon, distinct phrasing, or non-standard formatting.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">2.</span> Provenance & Metadata Dependency
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              Temporal supersedence evaluation directly relies on document effective dates and release version stamps. Omitted or corrupted metadata impedes chronological ordering.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">3.</span> LLM Deductive Bounds
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              Generative LLMs may occasionally struggle with deeply nested edge cases or highly domain-specific subtleties without fine-tuning, warranting calibrated confidence scores.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">4.</span> Closed-World Knowledge Boundary
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              The platform evaluates claims strictly against knowledge ingested into ChromaDB. Facts outside the indexed corpus appropriately resolve to <code className="text-indigo-400">UNCERTAIN</code>.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">5.</span> Scope of Contradiction
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              Not every lexical difference constitutes a substantive conflict; divergent rules between departments may reflect intentional division of responsibilities.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+            <h4 className="font-semibold text-slate-200 font-mono text-xs flex items-center gap-1.5">
+              <span className="text-amber-400">6.</span> Embedding Proximity vs. Truth
+            </h4>
+            <p className="text-slate-400 leading-relaxed">
+              Vector distance indicates contextual proximity, not factual accuracy. KnowledgeGuard enforces post-retrieval LLM deliberation to prevent ungrounded generation.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 text-xs text-slate-300 leading-relaxed">
+          <strong className="text-indigo-300 font-mono uppercase block mb-1">Human-in-the-Loop Imperative:</strong>
+          Critical infrastructure, security protocols, and compliance decisions should never rely entirely on automated AI verdicts. High-impact findings require verification by authorized engineering leads.
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,6 @@
+Relational Database Infrastructure Guidelines (Release 1.0)
+Date: 2023-04-15
+Author: Data Infrastructure Team
+Topic: Database & Storage
+
+MySQL 5.7 is the default relational database engine for all customer-facing transactional services. All schema migrations must target MySQL 5.7 compatibility and use the InnoDB storage engine with UTF8MB4 character encoding.

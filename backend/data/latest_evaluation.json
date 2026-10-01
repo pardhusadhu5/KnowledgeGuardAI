@@ -1,0 +1,484 @@
+{
+  "summary": {
+    "total_test_cases": 24,
+    "correct_predictions": 18,
+    "incorrect_predictions": 6,
+    "overall_accuracy": 75.0,
+    "average_confidence": 92.29,
+    "average_execution_time_ms": 8470.01,
+    "total_researches_triggered": 2,
+    "class_metrics": [
+      {
+        "verdict": "CURRENT",
+        "precision": 75.0,
+        "recall": 100.0,
+        "f1_score": 85.71,
+        "support": 6
+      },
+      {
+        "verdict": "OUTDATED",
+        "precision": 66.67,
+        "recall": 66.67,
+        "f1_score": 66.67,
+        "support": 6
+      },
+      {
+        "verdict": "CONFLICTING",
+        "precision": 66.67,
+        "recall": 66.67,
+        "f1_score": 66.67,
+        "support": 6
+      },
+      {
+        "verdict": "UNCERTAIN",
+        "precision": 100.0,
+        "recall": 66.67,
+        "f1_score": 80.0,
+        "support": 6
+      }
+    ],
+    "confusion_matrix": {
+      "labels": [
+        "CURRENT",
+        "OUTDATED",
+        "CONFLICTING",
+        "UNCERTAIN"
+      ],
+      "matrix": [
+        [
+          6,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          4,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          4,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          4
+        ]
+      ]
+    },
+    "last_run_timestamp": "2026-10-01 17:31:32 UTC"
+  },
+  "results": [
+    {
+      "id": "KG-001",
+      "claim": "API v2 is recommended for production services.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 94.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 2777.59,
+      "reason": "The 2026 Architecture Review Board notice explicitly deprecates API v2 in favor of API v3.",
+      "explanation": "The claim that \"API v2 is recommended for production services\" is supported by evidence from 2024 (Evidence #1-3) which states that API v2 is recommended for enterprise microservice integrations. However, newer evidence dated 2026 (Evidence #4-5) explicitly states that API v2 has been deprecated and that API v3 is now recommended. The newer, more recent documentation supersedes the older recommendation, indicating that the claim is no longer current.",
+      "retrieved_documents": [
+        "Enterprise Docs: api_v3_migration_notice.pdf",
+        "Enterprise Docs: api_v2_documentation.pdf"
+      ]
+    },
+    {
+      "id": "KG-002",
+      "claim": "All new client integrations should establish communication channels using API v2 endpoints.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "CURRENT",
+      "confidence": 98.0,
+      "is_correct": false,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 1803.13,
+      "reason": "API v2 is no longer supported for new production deployments as per Release 3.0.",
+      "explanation": "All retrieved documents (Evidence #1\u2011#5) are dated 2024-03-01, version 2.0, and explicitly state that API v2 is recommended and that all client integrations should use the v2 endpoints for communication. This directly confirms the claim that \"All new client integrations should establish communication channels using API v2 endpoints.\" No evidence contradicts or updates this guidance, so the claim is supported by the latest available evidence.",
+      "retrieved_documents": [
+        "Enterprise Docs: api_v2_documentation.txt",
+        "Enterprise Docs: api_v2_documentation.pdf"
+      ]
+    },
+    {
+      "id": "KG-003",
+      "claim": "MySQL 5.7 is the default relational database engine for transactional services.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 96.0,
+      "is_correct": true,
+      "evidence_count": 3,
+      "research_occurred": false,
+      "execution_time_ms": 1674.84,
+      "reason": "The 2026 Enterprise Database Architecture Update specifies that MySQL 5.7 reached EOL and PostgreSQL 16 is mandatory.",
+      "explanation": "Evidence #1 (2023) states MySQL 5.7 is the default relational database engine for transactional services. Evidence #2 (2026) explicitly declares MySQL 5.7 deprecated, end\u2011of\u2011life, and that PostgreSQL 16 is now the mandatory enterprise database standard, prohibiting new MySQL instances for transactional services. The newer 2026 document supersedes the 2023 guideline, showing the claim is no longer current.",
+      "retrieved_documents": [
+        "Enterprise Docs: database_standard_2023.txt",
+        "Enterprise Docs: database_migration_policy_2026.txt"
+      ]
+    },
+    {
+      "id": "KG-004",
+      "claim": "New transactional microservices should provision MySQL 5.7 database instances.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 95.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 1975.91,
+      "reason": "New transactional services are explicitly forbidden from provisioning MySQL instances in the 2026 policy.",
+      "explanation": "Evidence #1 (2023) states MySQL 5.7 is the default for new transactional services, supporting the claim. Evidence #2 (2026) is a newer, higher\u2011version policy that declares MySQL 5.7 end\u2011of\u2011life, deprecated, and explicitly forbids new transactional services from provisioning MySQL instances, mandating PostgreSQL 16 instead. The newer, authoritative policy overrides the older guideline, indicating the claim is no longer current.",
+      "retrieved_documents": [
+        "Enterprise Docs: database_standard_2023.txt",
+        "Enterprise Docs: database_migration_policy_2026.txt",
+        "Enterprise Docs: api_v2_documentation.pdf"
+      ]
+    },
+    {
+      "id": "KG-005",
+      "claim": "Inter-service authentication must be performed using static API keys passed in x-api-key header.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 86.0,
+      "is_correct": false,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 1889.49,
+      "reason": "Policy Beta (Zero-Trust Identity Mandate) supersedes static API keys, declaring them deprecated and disallowed.",
+      "explanation": "The retrieved evidence contains two sets of policy documents with opposing statements about inter-service authentication. Evidence #1-3 (security_policy_auth_a.txt) explicitly require static, cryptographically signed API keys in the x-api-key header and forbid token exchange. Conversely, Evidence #4-5 (security_policy_auth_b.txt) mandate OAuth 2.0 JWT bearer tokens for all inter-service communication and state that API keys are deprecated and disallowed. Both sets are dated 2025-08-10 and labeled as Policy-B, indicating they are contemporaneous but contradictory. Because the claim aligns with only one subset of the evidence and directly conflicts with the other, the overall status is conflicting.",
+      "retrieved_documents": [
+        "Enterprise Docs: security_policy_auth_b.txt",
+        "Enterprise Docs: security_policy_auth_a.txt"
+      ]
+    },
+    {
+      "id": "KG-006",
+      "claim": "Standalone Docker host daemons are standard for deploying production services.",
+      "expected_verdict": "OUTDATED",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 96.0,
+      "is_correct": true,
+      "evidence_count": 4,
+      "research_occurred": false,
+      "execution_time_ms": 1878.56,
+      "reason": "The 2026 platform standard dictates Kubernetes v1.29 and specifies that standalone Docker daemons are not permitted in production.",
+      "explanation": "The claim asserts that standalone Docker host daemons are standard for deploying production services. Evidence #1, a 2026 enterprise document, explicitly states that \"Standalone Docker host daemons are not permitted in production\" and that Kubernetes is the approved platform. No retrieved evidence supports the claim. Therefore the claim is contradicted by newer, authoritative policy, indicating it is no longer current.",
+      "retrieved_documents": [
+        "Enterprise Docs: container_orchestration_standard_2026.txt",
+        "Enterprise Docs: python_support_matrix_2024.txt"
+      ]
+    },
+    {
+      "id": "KG-007",
+      "claim": "Authentication requires API keys, whereas other internal standards mandate OAuth 2.0 JWT tokens.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "CURRENT",
+      "confidence": 96.0,
+      "is_correct": false,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 12328.56,
+      "reason": "Policy Alpha strictly forbids token exchange and requires API keys, while Policy Beta disallows API keys and mandates OAuth 2.0.",
+      "explanation": "The claim states that authentication requires API keys, while other internal standards require OAuth 2.0 JWT tokens. Retrieved evidence shows two distinct internal policies: Policy Alpha (Evidence #4-5) explicitly requires API keys and forbids token exchange, and Policy B (Evidence #1-3) mandates short\u2011lived OAuth 2.0 JWT bearer tokens and deprecates API keys. Both pieces of evidence are recent (2025) and directly support the two\u2011part claim, with no newer or contradictory information overturning either policy. Therefore the claim is consistent with the available evidence.",
+      "retrieved_documents": [
+        "Enterprise Docs: security_policy_auth_b.txt",
+        "Enterprise Docs: security_policy_auth_a.txt"
+      ]
+    },
+    {
+      "id": "KG-008",
+      "claim": "Developers can authenticate using either API keys or OAuth 2.0 bearer tokens.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 86.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 12141.04,
+      "reason": "Policy Alpha allows only API keys while Policy Beta allows only OAuth 2.0, presenting directly conflicting requirements.",
+      "explanation": "The retrieved evidence contains two sets of policy documents. Evidence #1-3 (Policy-B) explicitly state that authentication must use short-lived OAuth 2.0 JWT bearer tokens and that API keys are deprecated and disallowed. Evidence #4-5 (Policy Alpha) state the opposite: authentication must use API keys and token exchange is not permitted. These statements directly contradict each other, and there is no additional evidence indicating which policy supersedes the other or that both methods are simultaneously permitted. Therefore the claim that developers can authenticate using either API keys or OAuth 2.0 bearer tokens cannot be confirmed and is contradicted by the conflicting policies.",
+      "retrieved_documents": [
+        "Enterprise Docs: security_policy_auth_b.txt",
+        "Enterprise Docs: security_policy_auth_a.txt"
+      ]
+    },
+    {
+      "id": "KG-009",
+      "claim": "Web session inactivity timeout is strictly enforced at 15 minutes across all corporate portals.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 95.0,
+      "is_correct": true,
+      "evidence_count": 2,
+      "research_occurred": false,
+      "execution_time_ms": 11992.86,
+      "reason": "Cyber Defense Directive enforces 15 minutes with no extension, while Portal Operations standard configures 30 minutes for dashboards.",
+      "explanation": "Evidence #1 (dated 2025-09-01) explicitly states that web session inactivity timeout is strictly enforced at 15 minutes across all corporate portals with no extensions permitted. Evidence #2 (dated 2025-09-15) specifies that operator sessions on operations management dashboards use a 30\u2011minute inactivity timeout and allow 30\u2011minute keep\u2011alive tokens. These two authoritative documents provide contradictory statements about the timeout policy for corporate portals, and the conflict cannot be resolved from the available evidence.",
+      "retrieved_documents": [
+        "Enterprise Docs: session_timeout_security_sec.txt",
+        "Enterprise Docs: session_timeout_operations_ops.txt"
+      ]
+    },
+    {
+      "id": "KG-010",
+      "claim": "The corporate standard session timeout duration is 30 minutes of continuous inactivity.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 86.0,
+      "is_correct": true,
+      "evidence_count": 3,
+      "research_occurred": false,
+      "execution_time_ms": 11024.88,
+      "reason": "Operations standard specifies 30 minutes, directly conflicting with the Cyber Defense Directive mandating 15-minute termination.",
+      "explanation": "The claim states that the corporate standard session timeout is 30 minutes of continuous inactivity. Evidence #1 (Security Policy Sec-Policy-4, dated 2025-09-01) explicitly mandates a 15\u2011minute inactivity timeout for all corporate portals and console interfaces, with no extensions permitted. Evidence #2 (Operations Standard Ops-Standard-2, dated 2025-09-15) specifies a 30\u2011minute timeout for operator sessions on operations management dashboards. These two authoritative documents provide contradictory timeout durations for what appears to be the same corporate environment, and the evidence does not clarify which policy takes precedence. Therefore the claim cannot be confirmed nor refuted definitively, resulting in a conflict.",
+      "retrieved_documents": [
+        "Enterprise Docs: session_timeout_security_sec.txt",
+        "Enterprise Docs: session_timeout_operations_ops.txt"
+      ]
+    },
+    {
+      "id": "KG-011",
+      "claim": "Operational extensions beyond 15 minutes are permitted for dashboard session inactivity.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 86.0,
+      "is_correct": true,
+      "evidence_count": 2,
+      "research_occurred": false,
+      "execution_time_ms": 10909.85,
+      "reason": "Security policy states no operational extension beyond 15 minutes is permitted, while Operations manual permits 30-minute keep-alive tokens.",
+      "explanation": "The claim states that operational extensions beyond 15 minutes are allowed for dashboard session inactivity. Evidence #1 (Ops-Standard-2, 2025-09-15) explicitly permits a 30\u2011minute timeout and allows 30\u2011minute keep\u2011alive tokens for operations dashboards, supporting the claim. Evidence #2 (Sec-Policy-4, 2025-09-01) enforces a strict 15\u2011minute inactivity timeout across all corporate portals and console interfaces and explicitly states that no operational extension beyond 15 minutes is permitted, directly contradicting the claim. Both documents are recent and authoritative, and the evidence cannot be reconciled from the provided information, resulting in a conflict.",
+      "retrieved_documents": [
+        "Enterprise Docs: session_timeout_security_sec.txt",
+        "Enterprise Docs: session_timeout_operations_ops.txt"
+      ]
+    },
+    {
+      "id": "KG-012",
+      "claim": "Microservice communication permits token exchange rather than static API keys.",
+      "expected_verdict": "CONFLICTING",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 96.0,
+      "is_correct": false,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 12664.53,
+      "reason": "Policy Alpha explicitly states 'No token exchange is permitted' while Policy Beta mandates short-lived JWT token exchange.",
+      "explanation": "The claim states that microservice communication permits token exchange instead of static API keys. All retrieved evidence (Evidence #1, #2, #3) from the internal security policy dated 2025-08-10 explicitly requires a cryptographically signed x-api-key header for authentication and explicitly forbids token exchange. This newer, authoritative policy directly contradicts the claim, indicating the claim is no longer accurate.",
+      "retrieved_documents": [
+        "Enterprise Docs: security_policy_auth_a.txt",
+        "Enterprise Docs: api_v2_documentation.pdf"
+      ]
+    },
+    {
+      "id": "KG-013",
+      "claim": "Python 3.12 is supported across internal application tiers.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 97.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 15286.38,
+      "reason": "Both 2024 and 2026 runtime standards explicitly confirm Python 3.12 support and modernization.",
+      "explanation": "All retrieved documents (from 2024 and 2026) explicitly state that Python 3.12 is supported across all internal application tiers, including core microservices, analytics pipelines, and serverless runtimes. There is no evidence contradicting this claim, and the most recent evidence (2026-01-20) confirms continued support, reinforcing the claim's validity.",
+      "retrieved_documents": [
+        "Enterprise Docs: python_support_update_2026.txt",
+        "Enterprise Docs: python_support_matrix_2024.txt"
+      ]
+    },
+    {
+      "id": "KG-014",
+      "claim": "All core microservices and serverless runtimes are certified and supported under Python 3.12.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 97.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 7013.67,
+      "reason": "The 2026 Runtime Environment Modernization Report confirms Python 3.12 long-term stability assurance.",
+      "explanation": "All retrieved documents explicitly state that Python 3.12 continues to receive support and that all core microservices and serverless runtimes are fully certified, patched, and supported under Python 3.12. The 2026 report (Evidence #1-#3) directly confirms the claim, and the 2024 support matrix (Evidence #4-#5) further reinforces that Python 3.12 is the standard across internal tiers, implying continued certification.",
+      "retrieved_documents": [
+        "Enterprise Docs: python_support_update_2026.txt",
+        "Enterprise Docs: python_support_matrix_2024.txt"
+      ]
+    },
+    {
+      "id": "KG-015",
+      "claim": "API v3 is recommended for all engineering teams and new production deployments in 2026.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 98.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 11653.84,
+      "reason": "The 2026 Architecture Review Board document designates API v3 as the official recommended version.",
+      "explanation": "All retrieved documents (Evidence #1-#5) dated 2026-02-15 explicitly state that API v2 is deprecated, API v3 is recommended, and that beginning Q1 2026 all engineering teams must transition to API v3, with API v2 no longer supported for new production deployments. This directly confirms the claim that API v3 is recommended for all engineering teams and new production deployments in 2026.",
+      "retrieved_documents": [
+        "Enterprise Docs: api_v3_migration_notice.pdf",
+        "Enterprise Docs: api_v3_migration_notice.txt"
+      ]
+    },
+    {
+      "id": "KG-016",
+      "claim": "PostgreSQL 16 is the mandatory enterprise database standard for transactional workloads.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 94.0,
+      "is_correct": true,
+      "evidence_count": 3,
+      "research_occurred": false,
+      "execution_time_ms": 11276.56,
+      "reason": "The 2026 Database Architecture Update mandates PostgreSQL 16 for all active workloads.",
+      "explanation": "The most recent policy document (Evidence #1, dated 2026-01-10) explicitly states that PostgreSQL 16 is the mandatory enterprise database standard and that all transactional workloads must be migrated to it, prohibiting new MySQL instances. This directly supports the claim. The older 2023 document (Evidence #2) naming MySQL 5.7 as the default is superseded by the newer policy, so it does not create a lasting conflict.",
+      "retrieved_documents": [
+        "Enterprise Docs: database_standard_2023.txt",
+        "Enterprise Docs: database_migration_policy_2026.txt"
+      ]
+    },
+    {
+      "id": "KG-017",
+      "claim": "Kubernetes v1.29 is the approved enterprise container orchestration platform.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 97.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 9572.76,
+      "reason": "The 2026 Cloud Native Platform document explicitly approves Kubernetes v1.29.",
+      "explanation": "Evidence #1 from a 2026-02-01 enterprise document explicitly states \"Kubernetes v1.29 is the approved enterprise container orchestration platform.\" This directly confirms the claim. No other retrieved evidence contradicts this statement. The date of the source is recent (2026), indicating the information is up\u2011to\u2011date.",
+      "retrieved_documents": [
+        "Enterprise Docs: container_orchestration_standard_2026.txt",
+        "Enterprise Docs: api_v3_migration_notice.txt"
+      ]
+    },
+    {
+      "id": "KG-018",
+      "claim": "Daily automated database snapshots and cloud backups must be retained for 30 calendar days.",
+      "expected_verdict": "CURRENT",
+      "predicted_verdict": "CURRENT",
+      "confidence": 98.0,
+      "is_correct": true,
+      "evidence_count": 2,
+      "research_occurred": true,
+      "execution_time_ms": 9123.36,
+      "reason": "The 2026 Data Governance Policy specifies 30-day retention in geo-redundant storage.",
+      "explanation": "Evidence #1 explicitly states that daily automated database snapshots and cloud backups must be retained for exactly 30 calendar days, which directly matches the claim. Evidence #2 provides no contradictory information. Therefore the claim is supported by the most recent policy document.",
+      "retrieved_documents": [
+        "Enterprise Docs: cloud_backup_retention_policy_2026.txt",
+        "Enterprise Docs: database_migration_policy_2026.txt"
+      ]
+    },
+    {
+      "id": "KG-019",
+      "claim": "API v2 supports TLS 1.0 encryption protocol.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "UNCERTAIN",
+      "confidence": 85.0,
+      "is_correct": true,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 6110.7,
+      "reason": "The knowledge base documents API v2 features and deprecation, but makes no mention of TLS 1.0 protocol support.",
+      "explanation": "The retrieved documents focus on the deprecation of API v2 and the recommendation to migrate to API v3, mentioning upgraded payload encryption for v3. None of the evidence addresses which TLS versions API v2 supports, nor does any source explicitly state that TLS 1.0 is supported or unsupported. Because the claim about TLS 1.0 cannot be confirmed or refuted with the available evidence, the status is uncertain.",
+      "retrieved_documents": [
+        "Enterprise Docs: api_v3_migration_notice.pdf",
+        "Enterprise Docs: api_v3_migration_notice.txt"
+      ]
+    },
+    {
+      "id": "KG-020",
+      "claim": "The enterprise standard for post-quantum lattice cryptography has been approved for production adoption.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "OUTDATED",
+      "confidence": 96.0,
+      "is_correct": false,
+      "evidence_count": 3,
+      "research_occurred": false,
+      "execution_time_ms": 10801.68,
+      "reason": "The exploratory memo explicitly states that no standard has been decided or approved and research is ongoing.",
+      "explanation": "All retrieved documents (Evidence #1\u2011#3) are dated 2023\u201111\u201105 and explicitly state that the working group has made no formal conclusions or recommendations and that no standard for post\u2011quantum lattice cryptography has been decided or approved for organizational adoption. This directly contradicts the claim that an enterprise standard has been approved for production use, indicating the claim is no longer accurate according to the latest available evidence.",
+      "retrieved_documents": [
+        "Enterprise Docs: quantum_network_draft.txt"
+      ]
+    },
+    {
+      "id": "KG-021",
+      "claim": "All backend microservices must be implemented using Rust 1.75 compiler toolchain.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "CONFLICTING",
+      "confidence": 95.0,
+      "is_correct": false,
+      "evidence_count": 5,
+      "research_occurred": false,
+      "execution_time_ms": 12967.51,
+      "reason": "No documentation exists in the knowledge base establishing Rust compiler requirements or standards.",
+      "explanation": "The claim asserts that every backend microservice must be built with the Rust 1.75 toolchain. Retrieved evidence from multiple 2026 documents explicitly states that core microservices are certified, patched, and supported under Python 3.12, indicating they are implemented in Python rather than Rust. This directly opposes the claim's universal Rust requirement, creating a contradiction.",
+      "retrieved_documents": [
+        "Enterprise Docs: container_orchestration_standard_2026.txt",
+        "Enterprise Docs: python_support_update_2026.txt",
+        "Enterprise Docs: api_v2_documentation.pdf"
+      ]
+    },
+    {
+      "id": "KG-022",
+      "claim": "Redis cluster instances are mandated as the primary distributed cache layer.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "UNCERTAIN",
+      "confidence": 78.0,
+      "is_correct": true,
+      "evidence_count": 2,
+      "research_occurred": false,
+      "execution_time_ms": 9644.75,
+      "reason": "The indexed knowledge base contains no architectural guidelines regarding Redis caching or caching layers.",
+      "explanation": "The retrieved evidence consists of excerpts from a 2026 container orchestration standard that discuss Kubernetes version, OCI\u2011compliant images, and GitOps deployment practices. None of the provided text mentions Redis, distributed caching, or any requirement to use Redis cluster instances as the primary cache layer. Because the evidence neither supports nor directly contradicts the claim, there is insufficient information to determine its validity.",
+      "retrieved_documents": [
+        "Enterprise Docs: container_orchestration_standard_2026.txt"
+      ]
+    },
+    {
+      "id": "KG-023",
+      "claim": "Internal GraphQL federation gateways enforce a global 500ms query timeout limit.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "UNCERTAIN",
+      "confidence": 78.0,
+      "is_correct": true,
+      "evidence_count": 2,
+      "research_occurred": false,
+      "execution_time_ms": 8510.59,
+      "reason": "The knowledge base discusses REST API v2 and v3 but does not contain GraphQL federation or timeout specifications.",
+      "explanation": "The claim asserts that internal GraphQL federation gateways enforce a global 500\u202fms query timeout. The retrieved evidence consists of two identical excerpts from an Enterprise Service Architecture Guidelines document (Version 2.0, dated 2024-03-01) that discuss API v2 recommendations, standard rate limits, and JSON payloads, but contain no mention of GraphQL federation, gateway behavior, or timeout settings. Because the evidence neither supports nor contradicts the specific timeout claim, there is insufficient information to determine its validity.",
+      "retrieved_documents": [
+        "Enterprise Docs: api_v2_documentation.txt"
+      ]
+    },
+    {
+      "id": "KG-024",
+      "claim": "Automated disaster recovery failover to secondary cloud region occurs within 45 seconds.",
+      "expected_verdict": "UNCERTAIN",
+      "predicted_verdict": "UNCERTAIN",
+      "confidence": 92.0,
+      "is_correct": true,
+      "evidence_count": 1,
+      "research_occurred": true,
+      "execution_time_ms": 8257.17,
+      "reason": "The cloud backup policy defines retention periods (30 days), but specifies no RTO/RPO failover duration in seconds.",
+      "explanation": "The retrieved evidence only describes backup retention periods and geo-redundant storage policies. It does not mention any metrics, specifications, or performance data regarding automated disaster recovery failover times to a secondary cloud region. Therefore, there is insufficient information to confirm or refute the claim that failover occurs within 45 seconds.",
+      "retrieved_documents": [
+        "Enterprise Docs: cloud_backup_retention_policy_2026.txt"
+      ]
+    }
+  ]
+}

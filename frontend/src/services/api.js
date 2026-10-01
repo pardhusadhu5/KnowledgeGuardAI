@@ -56,6 +56,32 @@ export const api = {
     const res = await apiClient.get(`/investigations/${id}`);
     return res.data;
   },
+  updateReviewStatus: async (id, status) => {
+    const res = await apiClient.patch(`/investigations/${id}/review-status`, { status });
+    return res.data;
+  },
+
+  // Evaluation Benchmarks
+  runEvaluation: async () => {
+    const res = await apiClient.post('/evaluation/run');
+    return res.data;
+  },
+  getEvaluationSummary: async () => {
+    const res = await apiClient.get('/evaluation/summary');
+    return res.data;
+  },
+  getEvaluationResults: async () => {
+    const res = await apiClient.get('/evaluation/results');
+    return res.data;
+  },
+  getConfusionMatrix: async () => {
+    const res = await apiClient.get('/evaluation/confusion-matrix');
+    return res.data;
+  },
+  exportEvaluationReport: async () => {
+    const res = await apiClient.get('/evaluation/export', { responseType: 'blob' });
+    return res.data;
+  },
 };
 
 export default api;

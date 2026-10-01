@@ -1,0 +1,6 @@
+Corporate Cyber Defense Directive (Policy Sec-4)
+Date: 2025-09-01
+Author: Corporate Cyber Defense Team
+Topic: Session Management
+
+In accordance with zero-trust high-assurance security policies, web session inactivity timeout is strictly enforced at 15 minutes across all corporate portals and console interfaces. Sessions idle for more than 15 minutes must be terminated immediately. No operational extension beyond 15 minutes is permitted.

@@ -1,0 +1,6 @@
+Enterprise Data Governance & Disaster Recovery Policy (Release 2.4)
+Date: 2026-01-05
+Author: Disaster Recovery & Governance Office
+Topic: Cloud Operations
+
+Daily automated database snapshots and cloud backups must be retained for exactly 30 calendar days in geo-redundant object storage before automated expiration. Weekly rollups are archived for disaster recovery compliance.

@@ -100,11 +100,22 @@ def create_investigation(
     recommendation: str,
     human_verification_required: bool,
     steps: Optional[List[Dict[str, Any]]] = None,
-    comparison: str = ""
+    comparison: str = "",
+    human_review_status: str = "Pending Review",
+    execution_time_ms: float = 0.0,
+    research_occurred: bool = False,
+    retrieval_attempts: int = 1,
+    unique_documents: int = 1,
+    evidence_sufficient: bool = True,
+    structured_explanation: Optional[Dict[str, Any]] = None
 ) -> InvestigationEntity:
     metadata = {
         "steps": steps or [],
-        "comparison": comparison
+        "comparison": comparison,
+        "retrieval_attempts": retrieval_attempts,
+        "unique_documents": unique_documents,
+        "evidence_sufficient": evidence_sufficient,
+        "structured_explanation": structured_explanation or {}
     }
     inv = InvestigationEntity(
         claim=claim,
@@ -113,10 +124,23 @@ def create_investigation(
         confidence=confidence,
         recommendation=recommendation,
         human_verification_required=human_verification_required,
+        human_review_status=human_review_status,
+        execution_time_ms=execution_time_ms,
+        research_occurred=research_occurred,
         created_at=datetime.utcnow(),
         metadata_json=json.dumps(metadata)
     )
     db.add(inv)
+    db.commit()
+    db.refresh(inv)
+    return inv
+
+
+def update_investigation_review_status(db: Session, inv_id: int, new_status: str) -> Optional[InvestigationEntity]:
+    inv = db.query(InvestigationEntity).filter(InvestigationEntity.id == inv_id).first()
+    if not inv:
+        return None
+    inv.human_review_status = new_status
     db.commit()
     db.refresh(inv)
     return inv
@@ -184,10 +208,17 @@ def get_investigations(db: Session, skip: int = 0, limit: int = 100) -> List[Inv
             confidence=inv.confidence,
             recommendation=inv.recommendation,
             human_verification_required=inv.human_verification_required,
+            human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
+            execution_time_ms=float(getattr(inv, "execution_time_ms", 0.0) or 0.0),
+            research_occurred=bool(getattr(inv, "research_occurred", False)),
+            retrieval_attempts=int(meta.get("retrieval_attempts", 1)),
+            unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1)),
+            evidence_sufficient=bool(meta.get("evidence_sufficient", True)),
             created_at=inv.created_at,
             evidences=ev_items,
             steps=steps,
-            comparison=meta.get("comparison", "")
+            comparison=meta.get("comparison", ""),
+            structured_explanation=meta.get("structured_explanation")
         ))
     return results
 
@@ -225,10 +256,17 @@ def get_investigation_by_id(db: Session, inv_id: int) -> Optional[InvestigationR
         confidence=inv.confidence,
         recommendation=inv.recommendation,
         human_verification_required=inv.human_verification_required,
+        human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
+        execution_time_ms=float(getattr(inv, "execution_time_ms", 0.0) or 0.0),
+        research_occurred=bool(getattr(inv, "research_occurred", False)),
+        retrieval_attempts=int(meta.get("retrieval_attempts", 1)),
+        unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1)),
+        evidence_sufficient=bool(meta.get("evidence_sufficient", True)),
         created_at=inv.created_at,
         evidences=ev_items,
         steps=steps,
-        comparison=meta.get("comparison", "")
+        comparison=meta.get("comparison", ""),
+        structured_explanation=meta.get("structured_explanation")
     )
 
 

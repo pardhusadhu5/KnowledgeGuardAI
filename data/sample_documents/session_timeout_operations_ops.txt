@@ -1,0 +1,6 @@
+Enterprise Portal Operations Manual (Standard Ops-2)
+Date: 2025-09-15
+Author: Portal Operations Council
+Topic: Session Management
+
+To prevent workflow disruptions during telemetry reviews and batch infrastructure deployments, operator session timeout is configured to 30 minutes of continuous inactivity across operations management dashboards. Engineering teams may request 30-minute keep-alive tokens for ongoing operations tasks.

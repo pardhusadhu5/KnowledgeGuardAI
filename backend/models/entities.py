@@ -42,6 +42,9 @@ class InvestigationEntity(Base):
     confidence = Column(Float, default=0.0)
     recommendation = Column(Text, nullable=False)
     human_verification_required = Column(Boolean, default=True)
+    human_review_status = Column(String(50), default="Pending Review")  # Pending Review, Reviewed, Accepted, Rejected
+    execution_time_ms = Column(Float, default=0.0)
+    research_occurred = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     metadata_json = Column(Text, default="{}")  # stores steps, comparison, etc.
 

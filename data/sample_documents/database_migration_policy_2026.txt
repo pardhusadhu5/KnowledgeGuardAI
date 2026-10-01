@@ -1,0 +1,6 @@
+Enterprise Database Architecture Update (Release 3.1)
+Date: 2026-01-10
+Author: Enterprise Architecture Board
+Topic: Database & Storage
+
+PostgreSQL 16 is the mandatory enterprise database standard. MySQL 5.7 has reached end-of-life and is officially deprecated. All engineering teams must migrate active workloads to PostgreSQL 16 by Q2 2026. New transactional services are forbidden from provisioning MySQL instances.
