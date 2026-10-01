@@ -325,32 +325,105 @@ export const InvestigationResultCard = ({ result, onNewInvestigation }) => {
         </div>
       </div>
 
-      {/* Collapsible LangGraph Agent Workflow Steps */}
-      {steps && steps.length > 0 && (
-        <div className="pt-2 border-t border-slate-800">
+      {/* LangGraph Agent Workflow Execution Trace (Requirements 9 & 10) */}
+      <div className="pt-2 border-t border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold flex items-center gap-2">
+              <GitBranch className="w-4 h-4 text-indigo-400" />
+              Agent Execution Trace ({steps.length} Steps)
+            </h3>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
+              research_occurred 
+                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
+                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+            }`}>
+              {research_occurred ? 'Re-Search Activated' : 'Single-Pass Search'}
+            </span>
+          </div>
+
           <button
             onClick={() => setShowSteps(!showSteps)}
-            className="w-full flex items-center justify-between text-xs font-mono text-slate-400 hover:text-slate-200 py-1"
+            className="flex items-center gap-1 text-xs font-mono text-slate-400 hover:text-slate-200"
           >
-            <span>View LangGraph Execution Trace ({steps.length} Steps)</span>
+            <span>{showSteps ? 'Collapse Details' : 'Expand Node Details'}</span>
             {showSteps ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
+        </div>
 
-          {showSteps && (
-            <div className="mt-3 space-y-2 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs">
-              {steps.map((st, i) => (
-                <div key={i} className="flex items-start gap-2.5 pb-2 border-b border-slate-900 last:border-0 last:pb-0">
-                  <span className="text-indigo-400 shrink-0">#{i + 1}</span>
-                  <div>
-                    <span className="text-slate-300 font-semibold">{st.step_name}:</span>{' '}
-                    <span className="text-slate-400">{st.description}</span>
-                  </div>
-                </div>
-              ))}
+        {/* Trace Visual Decision Sequence */}
+        <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs space-y-2">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Understand Claim</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Search Knowledge Base</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Retrieve Evidence</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Inspect Metadata</span>
+          </div>
+          
+          {/* Sufficiency Decision Branch */}
+          {research_occurred ? (
+            <>
+              <div className="flex items-center gap-2 text-amber-400 bg-amber-950/20 p-1.5 rounded border border-amber-500/20">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span className="font-semibold text-amber-300">⚠ Evidence Insufficient</span>
+                <span className="text-slate-400 text-[10px]">→ Query Expansion Activated</span>
+              </div>
+              <div className="flex items-center gap-2 text-amber-300 pl-4">
+                <ArrowRight className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>Secondary Retrieval Executed (search_again node)</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-950/20 p-1.5 rounded border border-emerald-500/20">
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+              <span className="font-semibold text-emerald-300">✓ Evidence Sufficient</span>
+              <span className="text-slate-400 text-[10px]">→ Skipped Secondary Search</span>
             </div>
           )}
+
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Compare Relevant Evidence</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Send Structured Evidence to LLM</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Classify Knowledge [{classification}]</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-slate-200">Generate Explanation & Recommendation</span>
+          </div>
         </div>
-      )}
+
+        {/* Detailed node trace on expand */}
+        {showSteps && (
+          <div className="space-y-2 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs">
+            {steps.map((st, i) => (
+              <div key={i} className="flex items-start gap-2.5 pb-2 border-b border-slate-900 last:border-0 last:pb-0">
+                <span className="text-indigo-400 shrink-0">#{i + 1}</span>
+                <div>
+                  <span className="text-slate-300 font-semibold">{st.step_name}:</span>{' '}
+                  <span className="text-slate-400">{st.description}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

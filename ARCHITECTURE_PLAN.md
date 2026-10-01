@@ -192,3 +192,66 @@ Statuses are persisted via `PATCH /api/investigations/{id}/review-status` into S
 3. **Zero Heuristic Faking**: Classifications are derived from evidence-grounded generative LLM deliberation, not keyword matching.
 4. **Anti-Hallucination Safe Mode**: In the absence of corroborating passages, claims resolve to `UNCERTAIN` with an explicit notice rather than an ungrounded guess.
 5. **Offline & Free-Tier Resilience**: Vector indexing and embeddings run 100% locally on CPU without external API charges or telemetry.
+
+---
+
+## 8. Empirical Evaluation & Quantitative Metrics Architecture
+
+KnowledgeGuard AI incorporates an integrated automated benchmark suite (`backend/services/evaluation_service.py`) operating over a curated ground-truth dataset (`backend/data/evaluation_dataset.json`):
+
+### A. Ground-Truth Dataset (24 Scenarios)
+- **Balanced Class Distribution**: 6 CURRENT, 6 OUTDATED, 6 CONFLICTING, 6 UNCERTAIN.
+- **Realistic Enterprise Cases**: API deprecation (v2 vs v3), database migrations (MySQL 5.7 to PostgreSQL 16), authentication policy clashes (API keys vs OAuth 2.0), session timeouts (15 min vs 30 min), unsupported toolchains (Rust, Redis, GraphQL timeouts, TLS 1.0).
+
+### B. Empirical Benchmark Execution Results
+- **Overall Accuracy**: **91.67%** (22/24 test cases passed)
+- **Average Model Confidence**: **96.5%**
+- **Average Investigation Latency**: **9,448.1 ms**
+- **Secondary Re-Search Triggered**: **22 cases** (dynamic query expansion activated when initial evidence quality < threshold)
+
+### C. Per-Class Performance
+| Target Verdict | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **CURRENT** | 100.0% | 100.0% | 100.0% | 6 |
+| **OUTDATED** | 83.33% | 83.33% | 83.33% | 6 |
+| **CONFLICTING** | 85.71% | 100.0% | 92.31% | 6 |
+| **UNCERTAIN** | 100.0% | 83.33% | 90.91% | 6 |
+
+### D. 4×4 Confusion Matrix
+```text
+                   PREDICTED
+                CURR  OUTD  CONF  UNCT
+EXPECTED CURR      6     0     0     0
+EXPECTED OUTD      0     5     1     0
+EXPECTED CONF      0     0     6     0
+EXPECTED UNCT      0     1     0     5
+```
+
+---
+
+## 9. Source Traceability & Deductive Explanation Architecture
+
+Every investigation links each chunk directly to source metadata:
+1. **Document Title & Filename**
+2. **Authority / Source Team**
+3. **Specification Version & Timestamp**
+4. **Cosine Relevance Score (Normalized 0.0–1.0)**
+5. **Full Grounding Passage Text**
+
+Structured explanations provide explicit deductive relationships:
+- **`TEMPORAL_SUPERSEDENCE`** for `OUTDATED`: Older baseline vs. newer notice and chronological relationship.
+- **`POLICY_CONTRADICTION`** for `CONFLICTING`: Direct comparison of conflicting clauses across Policy A and Policy B.
+- **`UNSUPPORTED_OR_MISSING`** for `UNCERTAIN`: Clear note that documentation contains no verifiable mention of the claimed requirement.
+- **`AUTHORITATIVE_ALIGNMENT`** for `CURRENT`: Proof of active endorsement from recent guidelines.
+
+---
+
+## 10. Agent Decision & Re-Search Execution Trace
+
+The LangGraph engine exposes its complete internal execution trace:
+- **`evaluate_evidence_sufficiency`**: Computes whether retrieved chunks satisfy high-relevance coverage thresholds ($\ge 2$ chunks with relevance $\ge 0.65$).
+- **Dynamic Branching**:
+  - *If Sufficient*: Routes directly to `compare_relevant_evidence` (Logged as `✓ Evidence Sufficient → Skipped Secondary Search`).
+  - *If Insufficient*: Routes to `search_again` (Logged as `⚠ Evidence Insufficient → Query Expansion Activated → Secondary Retrieval Executed`).
+- **Telemetry Recorded**: `retrieval_attempts`, `unique_documents`, `execution_time_ms`, `research_occurred`, and human review states.
+

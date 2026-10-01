@@ -6,13 +6,20 @@ from backend.utils.logger import get_logger
 logger = get_logger("agent_tools")
 
 
-def search_knowledge(query: str, n_results: int = 6, max_distance: float = 1.25) -> List[Dict[str, Any]]:
-    """Tool: Searches vector database for semantic matches against query, filtering distant outliers."""
+def search_knowledge(query: str, n_results: int = 6, max_distance: float = 1.35) -> List[Dict[str, Any]]:
+    """Tool: Searches vector database for semantic matches against query, filtering distant outliers and deduplicating identical chunks."""
     logger.info(f"Tool search_knowledge invoked for: '{query}'")
-    results = vector_store.search(query=query, n_results=n_results)
+    results = vector_store.search(query=query, n_results=n_results * 2)
+    seen_texts = set()
+    deduped = []
+    for r in results:
+        norm = re.sub(r"\s+", " ", r.get("chunk_text", "").strip())
+        if norm and norm not in seen_texts:
+            seen_texts.add(norm)
+            deduped.append(r)
     # Filter out distant unrelated chunks
-    filtered = [r for r in results if r.get("distance") is None or r.get("distance") <= max_distance]
-    return filtered if filtered else (results[:2] if results else [])
+    filtered = [r for r in deduped if r.get("distance") is None or r.get("distance") <= max_distance]
+    return filtered[:n_results] if filtered else (deduped[:2] if deduped else [])
 
 
 def retrieve_evidence(query: str, fallback_terms: List[str] = None) -> List[Dict[str, Any]]:

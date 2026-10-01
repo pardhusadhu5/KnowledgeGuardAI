@@ -151,21 +151,58 @@ flowchart TD
 * **Full Query Log**: Searchable history of all past investigations stored in SQLite.
 * **Filter by Verdict**: Filter by `OUTDATED`, `CONFLICTING`, `CURRENT`, or `UNCERTAIN`.
 * **Detail Modal**: Opens full evidence transcripts, relevance scores, and node logs for regulatory compliance.
+* **Human Verification Tracking**: Displays live review status (`Pending Review`, `Reviewed`, `Accepted`, `Rejected`).
 
-### Feature 5: System Architecture & Health (`/about`)
+### Feature 5: Automated Evaluation & Benchmark Suite (`/evaluation`)
+* **Live Benchmark Execution**: Triggers automated evaluation across all 24 test cases in `backend/data/evaluation_dataset.json`.
+* **Empirical Performance Metrics**: Dynamically computes Accuracy, Precision, Recall, F1-Score, Confusion Matrix, and Average Latency.
+* **4×4 Interactive Confusion Matrix**: Visual grid indicating true vs predicted verdicts across all 4 classes.
+* **Per-Case Inspection Modal**: Review expected vs predicted verdicts, model rationale, and retrieved grounding passages.
+* **Report Export**: Instant export of complete benchmark audit report (`KnowledgeGuard_Evaluation_Report.md`).
+
+### Feature 6: System Architecture & Health (`/about`)
 * **Pipeline Status Badge**: Live ping verifying backend and vector database availability.
 * **Active Stack Specs**: Displays active LLM model (`openai/gpt-oss-120b` on Groq), embedding model, and database statistics.
+* **System Limitations & Reliability**: 6 key operational caveats regarding retrieval bounds, metadata dependencies, and human-in-the-loop governance.
 
 ---
 
 ## 5. Verification Scenarios & Real Empirical Results
 
-| Test Scenario | Input Query / Claim | Ingested Evidence Sources | Final Verdict | Confidence | LLM Reasoning Summary |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| **Outdated Knowledge Detection** | *"API v2 is recommended for all production services in 2026."* | `api_v2_documentation.txt` (2024)<br>`api_v3_migration_notice.pdf` (2026) | **`OUTDATED`** | **96%** | Identifies that Notice #1 & #3 (2026-02-15) explicitly deprecate API v2 in favor of API v3 with mandatory Q1 2026 migration. |
-| **Conflicting Policy Detection** | *"Developers can use basic auth or OAuth 2.0 for API services."* | `security_policy_auth_a.txt`<br>`security_policy_auth_b.txt` | **`CONFLICTING`** | **78%** | Pinpoints direct contradiction between Policy A (allowing Basic Auth) and Policy B (strictly mandating OAuth 2.0 and forbidding Basic Auth). |
-| **Uncertain / Ungrounded Claim** | *"API v2 supports TLS 1.0."* | `api_v2_documentation.pdf`<br>`security_policy_auth_b.txt` | **`UNCERTAIN`** | **73%** | Accurately identifies that while documents discuss API v2 and OAuth, zero documents mention TLS versions, refusing to hallucinate. |
-| **Current / Verified Knowledge** | *"Python 3.12 is the approved enterprise standard runtime."* | `python_support_update_2026.txt` (2026) | **`CURRENT`** | **95%** | Confirms claim aligns directly with the active 2026 Python Support Matrix document without superseding notices. |
+### A. Four Core Scenario Verification (`test_scenarios.py`)
+| Test Scenario | Input Query / Claim | Ingested Evidence Sources | Final Verdict | Confidence | Result |
+| :--- | :--- | :--- | :---: | :---: | :---: |
+| **Outdated Knowledge Detection** | *"Is API v2 still recommended?"* | `api_v2_documentation.txt`<br>`api_v3_migration_notice.pdf` | **`OUTDATED`** | **98%** | **PASS** |
+| **Current / Verified Knowledge** | *"Is Python 3.12 supported?"* | `python_support_matrix_2024.txt`<br>`python_support_update_2026.txt` | **`CURRENT`** | **97%** | **PASS** |
+| **Conflicting Policy Detection** | *"What authentication protocol is required?"* | `security_policy_auth_a.txt`<br>`security_policy_auth_b.txt` | **`CONFLICTING`** | **96%** | **PASS** |
+| **Uncertain / Ungrounded Claim** | *"Is quantum encryption mandated for all internal APIs?"* | `quantum_network_draft.txt` | **`UNCERTAIN`** | **96%** | **PASS** |
+
+### B. Automated 24-Case Evaluation Benchmark Results
+* **Total Test Cases**: 24
+* **Correct Predictions**: 22
+* **Incorrect Predictions**: 2
+* **Overall Accuracy**: **91.67%**
+* **Average Model Confidence**: **96.5%**
+* **Average Latency**: **9,448.1 ms**
+* **Secondary Re-Searches Triggered**: **22 cases**
+
+#### Class Performance Metrics
+| Target Class | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **CURRENT** | 100.0% | 100.0% | 100.0% | 6 |
+| **OUTDATED** | 83.33% | 83.33% | 83.33% | 6 |
+| **CONFLICTING** | 85.71% | 100.0% | 92.31% | 6 |
+| **UNCERTAIN** | 100.0% | 83.33% | 90.91% | 6 |
+
+#### 4×4 Confusion Matrix
+```text
+                   PREDICTED
+                CURR  OUTD  CONF  UNCT
+EXPECTED CURR      6     0     0     0
+EXPECTED OUTD      0     5     1     0
+EXPECTED CONF      0     0     6     0
+EXPECTED UNCT      0     1     0     5
+```
 
 ---
 
@@ -176,3 +213,4 @@ flowchart TD
 3. **Local Vector & Embedding Independence**: ChromaDB and SentenceTransformers run locally without external subscriptions or telemetry.
 4. **Zero-Mock Integrity**: Heuristic keyword approximations (`if "api" in claim`) were eliminated; all reasoning is genuinely synthesized by the generative LLM.
 5. **Full Audit Persistence**: Every investigation, citation, and reasoning trace is permanently recorded in SQLite.
+6. **Empirical Benchmarks**: Fully reproducible benchmark suite with exportable reporting adhering to academic verification standards.

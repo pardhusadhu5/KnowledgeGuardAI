@@ -93,7 +93,7 @@ def seed_sample_documents(db: Session = Depends(get_db)):
                     date = "2024-10-10"
             elif "auth" in name or "security" in name:
                 topic = "Security & Authentication"
-                if "alpha" in name or "key" in name:
+                if "alpha" in name or "auth_a" in name or name.endswith("_a"):
                     version = "Policy-A"
                     date = "2025-06-01"
                 else:
@@ -103,6 +103,12 @@ def seed_sample_documents(db: Session = Depends(get_db)):
                 topic = "Infrastructure"
                 version = "Draft-0.1"
                 date = "2023-11-05"
+
+            # Remove existing document with same filename to avoid redundant duplicate chunks
+            from backend.models.entities import DocumentEntity
+            existing_doc = db.query(DocumentEntity).filter(DocumentEntity.filename == file_path.name).first()
+            if existing_doc:
+                document_service.remove_document(existing_doc.id, db)
 
             doc = document_service.process_and_save_upload(
                 file_bytes=content,

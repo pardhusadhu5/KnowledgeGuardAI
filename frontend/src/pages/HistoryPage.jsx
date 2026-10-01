@@ -147,11 +147,13 @@ export const HistoryPage = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
-                        inv.human_verification_required
-                          ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                          : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                        (inv.human_review_status === 'Accepted' || inv.human_review_status === 'Reviewed')
+                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          : inv.human_review_status === 'Rejected'
+                          ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                          : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
                       }`}>
-                        {inv.human_verification_required ? 'REQUIRED' : 'NO'}
+                        {inv.human_review_status || (inv.human_verification_required ? 'Pending Review' : 'Reviewed')}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">

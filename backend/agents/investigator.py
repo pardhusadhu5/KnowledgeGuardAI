@@ -123,17 +123,19 @@ def evaluate_evidence_sufficiency_node(state: InvestigationState) -> Dict[str, A
     search_count = state.get("search_count", 1)
     steps = state.get("steps", [])
 
-    # Criteria: If fewer than 2 relevant pieces and search_count < 2, perform query expansion
-    is_sufficient = not (len(evidence) < 2 and search_count < 2)
+    # High-quality relevance threshold: requires at least 2 evidence chunks with relevance >= 0.65
+    high_quality_evidence = [e for e in evidence if e.get("relevance_score", 0.0) >= 0.65]
+    is_sufficient = (len(high_quality_evidence) >= 2) or (search_count >= 2)
 
     steps.append({
         "step_name": "evaluate_evidence_sufficiency",
-        "description": "Evaluated evidence completeness against investigative thresholds." if is_sufficient else "Initial evidence insufficient. Initiating secondary query expansion.",
+        "description": "Evidence coverage satisfied threshold (>= 2 high-relevance items). Proceeding directly to comparative analysis." if is_sufficient else f"Initial evidence insufficient ({len(high_quality_evidence)} high-relevance chunks). Activating fallback query expansion & secondary search.",
         "status": "completed",
         "details": {
             "sufficient": is_sufficient,
             "search_count": search_count,
-            "evidence_count": len(evidence)
+            "evidence_count": len(evidence),
+            "high_quality_count": len(high_quality_evidence)
         }
     })
 
