@@ -29,10 +29,11 @@ if not origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=True if origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 @app.on_event("startup")
@@ -51,37 +52,15 @@ app.include_router(api_router, prefix="/api")  # supports both direct and /api p
 @app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    """Health check endpoint probing database, vector store, and LLM configuration."""
-    db_status = "connected"
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-    except Exception as e:
-        logger.warning(f"Database health check probe error: {e}")
-        db_status = "error"
-
-    vs_status = "connected"
-    try:
-        from backend.rag.vector_store import vector_store
-        vector_store.collection.count()
-    except Exception as e:
-        logger.warning(f"Vector store health check probe error: {e}")
-        vs_status = "error"
-
-    effective_key = settings.get_effective_api_key()
-    llm_status = "configured" if bool(effective_key) else "unconfigured"
-
-    is_healthy = (db_status == "connected" and vs_status == "connected")
-
+    """Simple, lightweight health check endpoint for Render service liveness verification."""
     return {
-        "status": "healthy" if is_healthy else "degraded",
+        "status": "healthy",
         "service": settings.PROJECT_NAME,
         "env": settings.ENV,
-        "database": f"{'SQLite' if is_sqlite else 'PostgreSQL'} ({db_status})",
-        "vector_store": f"ChromaDB ({vs_status})",
-        "llm_provider": settings.LLM_PROVIDER,
-        "llm_status": llm_status
+        "database": "SQLite" if is_sqlite else "PostgreSQL",
+        "vector_store": "ChromaDB"
     }
+
 
 
 @app.exception_handler(Exception)
