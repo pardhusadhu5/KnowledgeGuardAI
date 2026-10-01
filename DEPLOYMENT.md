@@ -78,14 +78,22 @@ If you prefer provisioning each service individually via the Render web console:
 7. Click **Create Database**.
 8. Copy the **Internal Database URL** (e.g., `postgres://knowledgeguard_user:...@dpg-...-a/knowledgeguard`).
 
+> [!CAUTION]
+> **DO NOT USE `npm run start` ON RENDER.**
+> Render will fail with `/opt/render/project/src/package.json does not exist` if you accidentally create a **Node Web Service** at the root of the repository.
+> KnowledgeGuard AI uses **TWO separate services**:
+> 1. A **Python Web Service** for the FastAPI backend.
+> 2. A **Static Site** (not a Web Service!) with **Root Directory: `frontend`** for the React frontend.
+
 ### Step 2: Create Backend Web Service
 1. In Render Dashboard, click **New +** > **Web Service**.
 2. Connect your GitHub repository.
 3. Configure the service:
    - **Name**: `knowledgeguard-backend`
-   - **Language / Runtime**: `Python 3`
+   - **Environment / Runtime**: Select **Python 3** (NOT Node!).
    - **Region**: Same as PostgreSQL (e.g., Oregon).
    - **Branch**: `main`
+   - **Root Directory**: *(Leave empty — runs from repository root)*
    - **Build Command**:
      ```bash
      pip install -r requirements.txt
@@ -95,6 +103,7 @@ If you prefer provisioning each service individually via the Render web console:
      uvicorn backend.main:app --host 0.0.0.0 --port $PORT
      ```
    - **Health Check Path**: `/health`
+
 4. Add **Environment Variables**:
    | Key | Value | Description |
    |---|---|---|
@@ -116,17 +125,18 @@ If you prefer provisioning each service individually via the Render web console:
 7. Copy your backend URL: `https://knowledgeguard-backend.onrender.com`.
 
 ### Step 3: Create Frontend Static Site
-1. In Render Dashboard, click **New +** > **Static Site**.
+1. In Render Dashboard, click **New +** > **Static Site** *(Do NOT select "Web Service")*.
 2. Connect the same GitHub repository.
 3. Configure the static site:
    - **Name**: `knowledgeguard-frontend`
    - **Branch**: `main`
-   - **Root Directory**: `frontend`
+   - **Root Directory**: `frontend` *(CRITICAL: Must be set to `frontend` so Render locates `frontend/package.json`)*
    - **Build Command**:
      ```bash
      npm install && npm run build
      ```
    - **Publish Directory**: `dist`
+
 4. Add **Environment Variables**:
    | Key | Value | Description |
    |---|---|---|
