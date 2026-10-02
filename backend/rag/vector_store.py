@@ -68,6 +68,38 @@ class VectorStoreManager:
             logger.error(f"Error accessing collection {COLLECTION_NAME}: {e}")
             raise
 
+    def add_chunks_with_metadata(
+        self,
+        chunk_ids: List[str],
+        chunks: List[str],
+        metadatas: List[Dict[str, Any]]
+    ) -> List[str]:
+        if not chunks:
+            return []
+        self._ensure_initialized()
+
+        clean_metas = []
+        for m in metadatas:
+            clean_m = {
+                "document_id": int(m.get("document_id", 0)),
+                "chunk_index": int(m.get("chunk_index", 0)),
+                "page": int(m.get("page", 1)),
+                "source": str(m.get("source", "Document")),
+                "version": str(m.get("version", "1.0")),
+                "topic": str(m.get("topic", "General")),
+                "document_date": str(m.get("document_date", "")),
+                "filename": str(m.get("filename", "")),
+            }
+            clean_metas.append(clean_m)
+
+        # Use upsert to guarantee idempotency and avoid duplicate embeddings on retry
+        self.collection.upsert(
+            ids=chunk_ids,
+            documents=chunks,
+            metadatas=clean_metas
+        )
+        return chunk_ids
+
     def add_chunks(
         self,
         document_id: int,
@@ -82,8 +114,9 @@ class VectorStoreManager:
         metadatas = []
         for i in range(len(chunks)):
             meta = {
-                "document_id": document_id,
-                "chunk_index": i,
+                "document_id": int(document_id),
+                "chunk_index": int(i),
+                "page": int(base_metadata.get("page", 1)),
                 "source": str(base_metadata.get("source", "Document")),
                 "version": str(base_metadata.get("version", "1.0")),
                 "topic": str(base_metadata.get("topic", "General")),
@@ -92,7 +125,7 @@ class VectorStoreManager:
             }
             metadatas.append(meta)
 
-        self.collection.add(
+        self.collection.upsert(
             ids=ids,
             documents=chunks,
             metadatas=metadatas
@@ -137,6 +170,12 @@ class VectorStoreManager:
             for doc, meta, dist, cid in zip(docs, metas, distances, chunk_ids):
                 # Convert distance to a normalized similarity score (0.0 to 1.0)
                 relevance_score = max(0.0, min(1.0, 1.0 - (dist / 2.0))) if dist is not None else 0.8
+                page_val = meta.get("page", 1)
+                try:
+                    page_num = int(page_val)
+                except Exception:
+                    page_num = 1
+
                 items.append({
                     "chunk_id_str": cid,
                     "document_id": meta.get("document_id"),
@@ -146,6 +185,7 @@ class VectorStoreManager:
                     "date": meta.get("document_date", ""),
                     "topic": meta.get("topic", "General"),
                     "filename": meta.get("filename", ""),
+                    "page": page_num,
                     "relevance_score": round(relevance_score, 4),
                     "distance": dist
                 })

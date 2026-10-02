@@ -48,6 +48,20 @@ def init_db():
                     logger.info("Migrating schema: adding research_occurred to investigations")
                     bool_default = "0" if is_sqlite else "FALSE"
                     conn.execute(text(f"ALTER TABLE investigations ADD COLUMN research_occurred BOOLEAN DEFAULT {bool_default}"))
+
+        if "evidence" in tables:
+            existing_ev_cols = {col["name"] for col in inspector.get_columns("evidence")}
+            if "page" not in existing_ev_cols:
+                logger.info("Migrating schema: adding page to evidence table")
+                with engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE evidence ADD COLUMN page INTEGER DEFAULT 1"))
+
+        if "knowledge_chunks" in tables:
+            existing_kc_cols = {col["name"] for col in inspector.get_columns("knowledge_chunks")}
+            if "page" not in existing_kc_cols:
+                logger.info("Migrating schema: adding page to knowledge_chunks table")
+                with engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE knowledge_chunks ADD COLUMN page INTEGER DEFAULT 1"))
     except Exception as e:
         logger.warning(f"Database initialization notice: {e}")
 

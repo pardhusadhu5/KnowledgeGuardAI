@@ -1,0 +1,157 @@
+{
+  "description": "KnowledgeGuard AI Authoritative Reference Knowledge Base",
+  "last_updated": "2026-10-03 00:42:28",
+  "total_documents": 8,
+  "documents": [
+    {
+      "filename": "NIST_SP_800-61r2_Computer_Security_Incident_Handling_Guide.pdf",
+      "title": "Computer Security Incident Handling Guide (Revision 2)",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST SP 800-61r2",
+      "publication_date": "2012-08-01",
+      "effective_date": "2012-08-01",
+      "version": "Revision 2",
+      "topic": "Incident Response",
+      "category": "cybersecurity",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r2.pdf",
+      "authority": "Official Standard (Superseded by Rev 3 IPD)",
+      "relationship": {
+        "status": "SUPERSEDED",
+        "superseded_by": "NIST SP 800-61r3",
+        "notes": "Classic 4-phase incident handling cycle (Preparation; Detection & Analysis; Containment, Eradication & Recovery; Post-Incident Activity). Replaced by Rev 3 which aligns with CSF 2.0."
+      },
+      "summary": "Establishes baseline incident handling guidelines, incident response team structures, coordination mechanisms, and the traditional 4-phase incident response lifecycle."
+    },
+    {
+      "filename": "NIST_SP_800-61r3_ipd_Incident_Response_Recommendations.pdf",
+      "title": "Incident Response Recommendations and Considerations for Cybersecurity Risk Management (Revision 3 Initial Public Draft)",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST SP 800-61r3.ipd",
+      "publication_date": "2024-04-10",
+      "effective_date": "2024-04-10",
+      "version": "Revision 3 (Draft)",
+      "topic": "Incident Response",
+      "category": "cybersecurity",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r3.ipd.pdf",
+      "authority": "Initial Public Draft / Latest Guidance",
+      "relationship": {
+        "status": "CURRENT_DRAFT",
+        "revises": "NIST SP 800-61r2",
+        "notes": "Updates incident response posture to align with NIST CSF 2.0, emphasizing continuous governance, cloud architectures, and supply-chain incident coordination."
+      },
+      "summary": "Modernizes incident response practices, framing incident response within enterprise cybersecurity risk management and the CSF 2.0 Respond function."
+    },
+    {
+      "filename": "NIST_CSF_1.1_Framework_Critical_Infrastructure.pdf",
+      "title": "Framework for Improving Critical Infrastructure Cybersecurity (Version 1.1)",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST CSWP 04162018",
+      "publication_date": "2018-04-16",
+      "effective_date": "2018-04-16",
+      "version": "1.1",
+      "topic": "Cybersecurity Framework",
+      "category": "cybersecurity",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.04162018.pdf",
+      "authority": "Official Standard (Superseded by CSF 2.0)",
+      "relationship": {
+        "status": "SUPERSEDED",
+        "superseded_by": "NIST CSF 2.0",
+        "notes": "Structured around 5 core functions: Identify (ID), Protect (PR), Detect (DE), Respond (RS), Recover (RC). Does not include the GOVERN function."
+      },
+      "summary": "Framework providing common taxonomy and risk management mechanisms for critical infrastructure across five core functions."
+    },
+    {
+      "filename": "NIST_CSF_2.0_Cybersecurity_Framework.pdf",
+      "title": "The NIST Cybersecurity Framework (CSF) 2.0",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST CSWP 29",
+      "publication_date": "2024-02-26",
+      "effective_date": "2024-02-26",
+      "version": "2.0",
+      "topic": "Cybersecurity Framework",
+      "category": "cybersecurity",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf",
+      "authority": "Official Standard (Current)",
+      "relationship": {
+        "status": "CURRENT",
+        "revises": "NIST CSF 1.1",
+        "notes": "Expanded scope beyond critical infrastructure to all organizations. Added the new 'Govern' (GV) function to the original five functions."
+      },
+      "summary": "Flagship cybersecurity framework establishing 6 core functions: Govern (GV), Identify (ID), Protect (PR), Detect (DE), Respond (RS), and Recover (RC)."
+    },
+    {
+      "filename": "NIST_AI_100-1_AI_RMF_1.0.pdf",
+      "title": "Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST AI 100-1",
+      "publication_date": "2023-01-26",
+      "effective_date": "2023-01-26",
+      "version": "1.0",
+      "topic": "Artificial Intelligence Risk Management",
+      "category": "artificial_intelligence",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+      "authority": "Official Framework (Current)",
+      "relationship": {
+        "status": "CURRENT_FOUNDATIONAL",
+        "extended_by": "NIST AI 600-1",
+        "notes": "Defines foundational AI risk governance across four core functions: GOVERN, MAP, MEASURE, and MANAGE."
+      },
+      "summary": "Voluntary guidance to improve trustworthiness of AI systems and manage risks across design, development, and deployment."
+    },
+    {
+      "filename": "NIST_AI_600-1_Generative_AI_Profile.pdf",
+      "title": "Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST AI 600-1",
+      "publication_date": "2024-07-26",
+      "effective_date": "2024-07-26",
+      "version": "Final",
+      "topic": "Generative AI Risk Management",
+      "category": "artificial_intelligence",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf",
+      "authority": "Official Guidance (Current)",
+      "relationship": {
+        "status": "CURRENT_PROFILE",
+        "extends": "NIST AI 100-1",
+        "notes": "Identifies 12 unique risks specific to Generative AI (e.g., hallucinations, CBRN risks, confabulation, data privacy, copyright)."
+      },
+      "summary": "Companion profile to the AI RMF 1.0 specifically targeting risks, safety measures, and actions for Generative AI and Foundation Models."
+    },
+    {
+      "filename": "NIST_SP_800-218_Secure_Software_Development_Framework.pdf",
+      "title": "Secure Software Development Framework (SSDF) Version 1.1: Recommendations for Mitigating the Risk of Software Vulnerabilities",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST SP 800-218",
+      "publication_date": "2022-02-03",
+      "effective_date": "2022-02-03",
+      "version": "1.1",
+      "topic": "Software Supply Chain Security",
+      "category": "software",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf",
+      "authority": "Official Standard (Current)",
+      "relationship": {
+        "status": "CURRENT",
+        "notes": "Core standard for Executive Order 14028 software supply chain security; structured into Prepare Organization (PO), Protect Software (PS), Produce Well-Secured Software (PW), and Respond to Vulnerabilities (RV)."
+      },
+      "summary": "Defines fundamental, sound secure software development practices to reduce the number of vulnerabilities in released software and mitigate impacts."
+    },
+    {
+      "filename": "NIST_SP_800-207_Zero_Trust_Architecture.pdf",
+      "title": "Zero Trust Architecture",
+      "organization": "National Institute of Standards and Technology (NIST)",
+      "document_identifier": "NIST SP 800-207",
+      "publication_date": "2020-08-11",
+      "effective_date": "2020-08-11",
+      "version": "Final",
+      "topic": "Zero Trust Security Architecture",
+      "category": "technology",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-207.pdf",
+      "authority": "Official Standard (Current)",
+      "relationship": {
+        "status": "CURRENT",
+        "notes": "Foundational federal definition of Zero Trust tenets, Policy Decision Points (PDP), Policy Enforcement Points (PEP), and deployment models."
+      },
+      "summary": "Establishes core cybersecurity guidelines and architectural tenets for implementing Zero Trust Architectures (ZTA) across enterprise systems."
+    }
+  ]
+}

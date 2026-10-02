@@ -40,6 +40,7 @@ class EvidenceItem(BaseModel):
     source: str = ""
     version: str = ""
     date: str = ""
+    page: Optional[int] = 1
     is_stored_knowledge: bool = False
 
 

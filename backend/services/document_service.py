@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import shutil
 from pathlib import Path
@@ -6,7 +7,12 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 from backend.utils.config import settings, UPLOAD_DIR
 from backend.utils.logger import get_logger
-from backend.rag.document_loader import extract_text_from_file
+from backend.rag.document_loader import (
+    extract_text_from_file,
+    iter_pdf_page_batches,
+    DEFAULT_PAGE_BATCH_SIZE,
+    MAX_TOTAL_PAGES
+)
 from backend.rag.text_splitter import split_text_into_chunks
 from backend.rag.vector_store import vector_store
 from backend.database.crud import (
@@ -35,7 +41,7 @@ class DocumentService:
         if not file_bytes:
             raise ValueError("Uploaded file is empty.")
 
-        logger.info(f"[Diagnostic: PDF Received] '{filename}' ({len(file_bytes)} bytes)")
+        logger.info(f"[Diagnostic: File Received] '{filename}' ({len(file_bytes)} bytes)")
 
         # Ensure upload directory exists safely
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -58,55 +64,152 @@ class DocumentService:
         )
         logger.info(f"[Diagnostic: Database Initialized] Document record created with ID={doc.id}, status='processing'")
 
-        try:
-            # 2. Extract & clean text
-            cleaned_text, doc_type = extract_text_from_file(dest_path)
-            logger.info(f"[Diagnostic: PDF Text Extracted] Extracted {len(cleaned_text)} characters (type={doc_type}) from '{safe_filename}'")
-            
-            # 3. Split into chunks
-            chunks = split_text_into_chunks(cleaned_text, chunk_size=380, chunk_overlap=50)
-            if not chunks:
-                raise ValueError("No readable text chunks could be extracted from document.")
-            logger.info(f"[Diagnostic: Chunks Created] Generated {len(chunks)} chunks from '{safe_filename}'")
+        # Purge any stale vectors for this document ID in case of re-processing
+        vector_store.delete_document_chunks(doc.id)
 
-            # 4. Save chunks in DB
-            for idx, chunk_text in enumerate(chunks):
-                create_knowledge_chunk(
-                    db=db,
-                    document_id=doc.id,
-                    chunk_text=chunk_text,
-                    chunk_index=idx,
-                    metadata={
+        try:
+            suffix = dest_path.suffix.lower()
+            global_chunk_idx = 0
+            total_pages_count = 1
+
+            if suffix == ".pdf":
+                # Process PDF in page-batches to avoid memory spikes and Render timeouts
+                total_batches_count = 0
+                for batch in iter_pdf_page_batches(
+                    dest_path,
+                    batch_size=DEFAULT_PAGE_BATCH_SIZE,
+                    max_total_pages=MAX_TOTAL_PAGES
+                ):
+                    b_idx = batch["batch_index"]
+                    total_batches = batch["total_batches"]
+                    start_page = batch["start_page"]
+                    end_page = batch["end_page"]
+                    total_pages_count = batch["total_pages"]
+                    total_batches_count = total_batches
+
+                    if b_idx == 1:
+                        logger.info(f"Processing PDF: {total_pages_count} pages ({total_batches} batches)")
+
+                    logger.info(f"Batch {b_idx}/{total_batches}: pages {start_page}–{end_page}")
+
+                    batch_chunk_texts: List[str] = []
+                    batch_chunk_ids: List[str] = []
+                    batch_chunk_metas: List[Dict[str, Any]] = []
+
+                    for page_item in batch["pages"]:
+                        page_num = page_item["page_number"]
+                        page_text = page_item["text"]
+                        if not page_text:
+                            continue
+
+                        # Split page text into overlapping chunks
+                        page_chunks = split_text_into_chunks(page_text, chunk_size=380, chunk_overlap=50)
+
+                        for local_c_idx, c_text in enumerate(page_chunks):
+                            chunk_id_str = f"doc_{doc.id}_p{page_num}_c{local_c_idx}"
+
+                            # Persist chunk to relational database with page number and provenance
+                            create_knowledge_chunk(
+                                db=db,
+                                document_id=doc.id,
+                                chunk_text=c_text,
+                                chunk_index=global_chunk_idx,
+                                page=page_num,
+                                metadata={
+                                    "source": doc.source,
+                                    "version": doc.version,
+                                    "date": doc.document_date,
+                                    "topic": doc.topic,
+                                    "filename": doc.filename,
+                                    "page": page_num,
+                                    "chunk_id_str": chunk_id_str
+                                }
+                            )
+
+                            # Accumulate for batch ChromaDB insertion
+                            batch_chunk_texts.append(c_text)
+                            batch_chunk_ids.append(chunk_id_str)
+                            batch_chunk_metas.append({
+                                "document_id": doc.id,
+                                "chunk_index": global_chunk_idx,
+                                "page": page_num,
+                                "source": doc.source,
+                                "version": doc.version,
+                                "topic": doc.topic,
+                                "document_date": doc.document_date,
+                                "filename": doc.filename,
+                            })
+                            global_chunk_idx += 1
+
+                    # Index batch vector embeddings into ChromaDB
+                    if batch_chunk_texts:
+                        logger.info(f"Indexing pages {start_page}–{end_page}... ({len(batch_chunk_texts)} chunks)")
+                        vector_store.add_chunks_with_metadata(
+                            chunk_ids=batch_chunk_ids,
+                            chunks=batch_chunk_texts,
+                            metadatas=batch_chunk_metas
+                        )
+
+                if global_chunk_idx == 0:
+                    raise ValueError("No readable text chunks could be extracted from PDF document.")
+
+                logger.info(f"PDF processing completed: {total_pages_count} pages processed, {global_chunk_idx} total chunks generated and indexed.")
+
+            elif suffix in [".txt", ".md", ".json", ".csv"]:
+                # Process plain text documents
+                cleaned_text, doc_type = extract_text_from_file(dest_path)
+                chunks = split_text_into_chunks(cleaned_text, chunk_size=380, chunk_overlap=50)
+                if not chunks:
+                    raise ValueError("No readable text chunks could be extracted from document.")
+
+                chunk_ids = []
+                chunk_metas = []
+                for idx, chunk_text in enumerate(chunks):
+                    cid = f"doc_{doc.id}_p1_c{idx}"
+                    create_knowledge_chunk(
+                        db=db,
+                        document_id=doc.id,
+                        chunk_text=chunk_text,
+                        chunk_index=idx,
+                        page=1,
+                        metadata={
+                            "source": doc.source,
+                            "version": doc.version,
+                            "date": doc.document_date,
+                            "topic": doc.topic,
+                            "filename": doc.filename,
+                            "page": 1,
+                            "chunk_id_str": cid
+                        }
+                    )
+                    chunk_ids.append(cid)
+                    chunk_metas.append({
+                        "document_id": doc.id,
+                        "chunk_index": idx,
+                        "page": 1,
                         "source": doc.source,
                         "version": doc.version,
-                        "date": doc.document_date,
                         "topic": doc.topic,
-                        "filename": doc.filename
-                    }
+                        "document_date": doc.document_date,
+                        "filename": doc.filename,
+                    })
+
+                vector_store.add_chunks_with_metadata(
+                    chunk_ids=chunk_ids,
+                    chunks=chunks,
+                    metadatas=chunk_metas
                 )
-            logger.info(f"[Diagnostic: Database Metadata Saved] Saved {len(chunks)} chunks to relational database for doc_id={doc.id}")
+                global_chunk_idx = len(chunks)
+                logger.info(f"Text document processing completed: {global_chunk_idx} chunks indexed.")
 
-            # 5. Index into ChromaDB vector store
-            logger.info(f"[Diagnostic: Embedding Started] Generating vector embeddings for {len(chunks)} chunk(s)...")
-            logger.info(f"[Diagnostic: ChromaDB Insertion Started] Inserting chunks into ChromaDB collection...")
-            vector_store.add_chunks(
-                document_id=doc.id,
-                chunks=chunks,
-                base_metadata={
-                    "source": doc.source,
-                    "version": doc.version,
-                    "topic": doc.topic,
-                    "document_date": doc.document_date,
-                    "filename": doc.filename
-                }
-            )
-            logger.info(f"[Diagnostic: ChromaDB Insertion Completed] {len(chunks)} vector chunks indexed in ChromaDB")
+            else:
+                raise ValueError(f"Unsupported file format: {suffix}. Only PDF and TXT documents are supported.")
 
-            # 6. Mark ready
+            # Mark document record as ready
             doc.status = "ready"
             db.commit()
             db.refresh(doc)
-            logger.info(f"[Diagnostic: Success] Successfully processed and indexed document '{safe_filename}' (id={doc.id})")
+            logger.info(f"[Diagnostic: Success] Successfully processed and indexed document '{safe_filename}' (id={doc.id}, total_chunks={global_chunk_idx})")
             return doc
 
         except Exception as e:
@@ -160,7 +263,9 @@ class DocumentService:
                 {
                     "id": c.id,
                     "chunk_index": c.chunk_index,
-                    "chunk_text": c.chunk_text
+                    "page": getattr(c, "page", 1) or 1,
+                    "chunk_text": c.chunk_text,
+                    "metadata": json.loads(c.metadata_json) if c.metadata_json else {"page": getattr(c, "page", 1) or 1}
                 }
                 for c in chunks
             ]

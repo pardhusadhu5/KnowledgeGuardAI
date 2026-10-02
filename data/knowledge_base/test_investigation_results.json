@@ -1,0 +1,142 @@
+[
+  {
+    "test_id": "query_1_temporal_incident_handling",
+    "claim": "Is NIST SP 800-61 Revision 2 the current authoritative standard for computer security incident handling?",
+    "expected": "OUTDATED / CONFLICTING",
+    "classification": "CURRENT",
+    "confidence": 96.0,
+    "human_verification_required": true,
+    "execution_time_s": 3.59,
+    "unique_documents": 2,
+    "evidence_count": 5,
+    "explanation": "Evidence #1 (2024-04-10 draft Revision 3) explicitly states that the draft will supersede SP 800-61r2 once it is finalized, indicating that Revision 2 remains the authoritative version at present. Evidence #3-5 confirm that Revision 2 was formally published in August 2012 and is the latest finalized release. No evidence shows that Revision 3 has been finalized, so the current authoritative standard is still Revision 2.",
+    "top_evidence": [
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST SP 800-61r3",
+        "version": "Revision 3 (Draft)",
+        "date": "2024-04-10",
+        "relevance_score": 0.7765,
+        "snippet": "Once this publication is finalized, it will supersede SP 800-61r2 (Revision 2), Computer Security \nIncident Handling Guide [SP800-61r2]. 1.2."
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST SP 800-61r3",
+        "version": "Revision 3 (Draft)",
+        "date": "2024-04-10",
+        "relevance_score": 0.7721,
+        "snippet": "https://doi.org/10.6028/NIST.SP.800-\n37r\n2 \n[SP800-61r2] Cichonski PR, Millar T, Grance T, Scarfone KA (2012) Computer Security \nIncident Handling Guide. (National Institute of Sta"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST SP 800-61r2",
+        "version": "Revision 2",
+        "date": "2012-08-01",
+        "relevance_score": 0.7494,
+        "snippet": "COMPUTER SECURITY INCIDENT HANDLING GUIDE \n4 \n1. Introduction \n1.1 Authority \nThe National Institute of Standards and Technology (NIST) developed this document in furtherance of it"
+      }
+    ]
+  },
+  {
+    "test_id": "query_2_csf_function_comparison",
+    "claim": "Does NIST Cybersecurity Framework (CSF) 2.0 introduce the GOVERN function in addition to the original five functions in CSF 1.1?",
+    "expected": "CURRENT",
+    "classification": "CURRENT",
+    "confidence": 97.0,
+    "human_verification_required": true,
+    "execution_time_s": 1.6,
+    "unique_documents": 1,
+    "evidence_count": 5,
+    "explanation": "Evidence #1 (page 10) explicitly lists GOVERN alongside IDENTIFY, PROTECT, DETECT, RESPOND, and RECOVER as a CSF 2.0 function, confirming that the new version adds a sixth function. Evidence #4 confirms the document is version 2.0 of the NIST CSF, and no evidence contradicts this addition. Therefore the claim that CSF 2.0 introduces the GOVERN function in addition to the original five functions is supported by the latest authoritative documentation.",
+    "top_evidence": [
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.7911,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n 5 \n \nFig. 2. CSF Functions \nThe Functions should be addressed concurrently. Actions that support GOVERN"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.7765,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n iv \nPreface \nT\nhe Cybersecurity Framework (CSF) 2.0 is designed to help organizations of all sizes and"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.7759,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n \n 15 \nAppendix A. CSF Core \nThis appendix describes the Functions, Categories, and Subcategories of the"
+      }
+    ]
+  },
+  {
+    "test_id": "query_3_ai_rmf_functions",
+    "claim": "What are the core functions of the NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)?",
+    "expected": "CURRENT",
+    "classification": "CURRENT",
+    "confidence": 98.0,
+    "human_verification_required": true,
+    "execution_time_s": 1.71,
+    "unique_documents": 1,
+    "evidence_count": 5,
+    "explanation": "Evidence #4 from the official NIST AI RMF 1.0 document (dated 2023-01-26) explicitly states that the AI RMF Core is composed of four functions: GOVERN, MAP, MEASURE, and MANAGE. This directly answers the claim about the core functions, and no newer or conflicting NIST documents were retrieved that modify or replace these functions.",
+    "top_evidence": [
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST AI 100-1",
+        "version": "1.0",
+        "date": "2023-01-26",
+        "relevance_score": 0.8523,
+        "snippet": "NIST AI 100-1\nArtificial Intelligence Risk Management\nFramework (AI RMF 1.0)"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST AI 100-1",
+        "version": "1.0",
+        "date": "2023-01-26",
+        "relevance_score": 0.8204,
+        "snippet": "NIST AI 100-1\nArtificial Intelligence Risk Management\nFramework (AI RMF 1.0)\nThis publication is available free of charge from:\nhttps://doi.org/10.6028/NIST.AI.100-1\nJanuary 2023\nU"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST AI 100-1",
+        "version": "1.0",
+        "date": "2023-01-26",
+        "relevance_score": 0.8182,
+        "snippet": "This publication is available free of charge from: https://doi.org/10.6028/NIST.AI.100-1\nUpdate Schedule and Versions\nThe Artificial Intelligence Risk Management Framework (AI RMF)"
+      }
+    ]
+  },
+  {
+    "test_id": "query_4_csf_scope_outdated",
+    "claim": "The NIST Cybersecurity Framework applies exclusively to critical infrastructure organizations as specified in CSF version 1.1.",
+    "expected": "OUTDATED",
+    "classification": "OUTDATED",
+    "confidence": 96.0,
+    "human_verification_required": true,
+    "execution_time_s": 1.78,
+    "unique_documents": 1,
+    "evidence_count": 5,
+    "explanation": "The claim states that the NIST Cybersecurity Framework (CSF) applies exclusively to critical infrastructure organizations as defined in CSF version 1.1. The retrieved evidence is from the newer CSF version 2.0 (dated 2024-02-26) and explicitly says the framework is \"designed to help organizations of all sizes and sectors \u2014 including industry, government, academia, and nonprofit\" (Evidence #1, page 5). This directly contradicts the exclusivity assertion and indicates that the newer version supersedes any earlier version that might have limited scope. Since the claim relies on an older interpretation that has been replaced by the broader applicability in version 2.0, it is classified as OUTDATED.",
+    "top_evidence": [
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.8605,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n iv \nPreface \nT\nhe Cybersecurity Framework (CSF) 2.0 is designed to help organizations of all sizes and"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.8454,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n 10 \n5. Improving Cybersecurity Risk Communication and Integration \nThe CSF\u2019s use will vary based on an"
+      },
+      {
+        "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
+        "version": "2.0",
+        "date": "2024-02-26",
+        "relevance_score": 0.8382,
+        "snippet": "NIST CSWP 29 The NIST Cybersecurity Framework (CSF) 2.0 \nFebruary 26, 2024 \n 3 \n2. Introduction to the CSF Core \nAppendix A is the CSF Core \u2014 a set of cybersecurity outcomes arrang"
+      }
+    ]
+  }
+]

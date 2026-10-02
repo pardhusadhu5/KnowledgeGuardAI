@@ -401,7 +401,14 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
               {viewingDoc.chunks?.map((chk) => (
                 <div key={chk.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
-                    <span>Chunk #{chk.chunk_index + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span>Chunk #{chk.chunk_index + 1}</span>
+                      {(chk.page || chk.metadata?.page) && (
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[10px]">
+                          Page {chk.page || chk.metadata?.page}
+                        </span>
+                      )}
+                    </div>
                     <span>Length: {chk.chunk_text.length} chars</span>
                   </div>
                   <p className="text-xs text-slate-200 leading-relaxed font-sans">

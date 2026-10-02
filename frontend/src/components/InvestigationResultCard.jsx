@@ -245,6 +245,11 @@ export const InvestigationResultCard = ({ result, onNewInvestigation }) => {
                         v{ev.version}
                       </span>
                     )}
+                    {ev.page && (
+                      <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[10px]">
+                        Page {ev.page}
+                      </span>
+                    )}
                     {ev.date && (
                       <span className="flex items-center gap-1 text-[10px] text-slate-400">
                         <Calendar className="w-3 h-3 text-slate-500" />

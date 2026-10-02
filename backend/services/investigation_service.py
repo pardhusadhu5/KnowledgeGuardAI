@@ -90,6 +90,7 @@ class InvestigationService:
                 source=ev.get("source", "Document"),
                 version=ev.get("version", "1.0"),
                 date=ev.get("date", ""),
+                page=int(ev.get("page", 1)) if ev.get("page") is not None else 1,
                 is_stored_knowledge=is_stored
             )
 

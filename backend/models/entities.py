@@ -26,6 +26,7 @@ class KnowledgeChunkEntity(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
     chunk_index = Column(Integer, default=0)
+    page = Column(Integer, default=1)
     chunk_text = Column(Text, nullable=False)
     metadata_json = Column(Text, default="{}")
 
@@ -58,6 +59,7 @@ class EvidenceEntity(Base):
     investigation_id = Column(Integer, ForeignKey("investigations.id", ondelete="CASCADE"), nullable=False)
     document_id = Column(Integer, ForeignKey("documents.id", ondelete="SET NULL"), nullable=True)
     chunk_id = Column(Integer, ForeignKey("knowledge_chunks.id", ondelete="SET NULL"), nullable=True)
+    page = Column(Integer, default=1)
     evidence_text = Column(Text, nullable=False)
     relevance_score = Column(Float, default=0.0)
     source = Column(String(255), default="")

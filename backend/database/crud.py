@@ -72,13 +72,19 @@ def create_knowledge_chunk(
     document_id: int,
     chunk_text: str,
     chunk_index: int = 0,
+    page: int = 1,
     metadata: Optional[Dict[str, Any]] = None
 ) -> KnowledgeChunkEntity:
+    if metadata is None:
+        metadata = {}
+    if "page" not in metadata:
+        metadata["page"] = page
     chunk = KnowledgeChunkEntity(
         document_id=document_id,
         chunk_text=chunk_text,
         chunk_index=chunk_index,
-        metadata_json=json.dumps(metadata or {})
+        page=page,
+        metadata_json=json.dumps(metadata)
     )
     db.add(chunk)
     db.commit()
@@ -156,6 +162,7 @@ def add_evidence_to_investigation(
     source: str = "",
     version: str = "",
     date: str = "",
+    page: int = 1,
     is_stored_knowledge: bool = False
 ) -> EvidenceEntity:
     ev = EvidenceEntity(
@@ -167,6 +174,7 @@ def add_evidence_to_investigation(
         source=source,
         version=version,
         date=date,
+        page=page,
         is_stored_knowledge=is_stored_knowledge
     )
     db.add(ev)
@@ -189,6 +197,7 @@ def get_investigations(db: Session, skip: int = 0, limit: int = 100) -> List[Inv
                 source=e.source,
                 version=e.version,
                 date=e.date,
+                page=getattr(e, "page", 1) or 1,
                 is_stored_knowledge=e.is_stored_knowledge
             )
             for e in inv.evidences
@@ -237,6 +246,7 @@ def get_investigation_by_id(db: Session, inv_id: int) -> Optional[InvestigationR
             source=e.source,
             version=e.version,
             date=e.date,
+            page=getattr(e, "page", 1) or 1,
             is_stored_knowledge=e.is_stored_knowledge
         )
         for e in inv.evidences

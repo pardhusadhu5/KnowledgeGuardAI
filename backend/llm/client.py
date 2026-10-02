@@ -77,9 +77,10 @@ class LLMClient:
             date = ev.get("date", "N/A")
             filename = ev.get("filename", "")
             doc_id = ev.get("document_id", "")
+            page = ev.get("page", 1)
             text = ev.get("chunk_text", "")
             formatted_pieces.append(
-                f"[Evidence #{i}]\n- Document ID: {doc_id}\n- Filename: {filename}\n- Source: {source}\n- Version: {version}\n- Date: {date}\n- Text: \"{text}\""
+                f"[Evidence #{i}]\n- Document ID: {doc_id}\n- Filename: {filename}\n- Page: {page}\n- Source: {source}\n- Version: {version}\n- Date: {date}\n- Text: \"{text}\""
             )
         evidence_formatted = "\n\n".join(formatted_pieces)
 
