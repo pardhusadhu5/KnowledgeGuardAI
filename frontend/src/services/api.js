@@ -1,9 +1,53 @@
 import axios from 'axios';
 
-// Base API URL is configurable via VITE_API_BASE_URL in production (Render)
-// In local development, defaults to '/api' which is proxied to http://localhost:8000 by Vite
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+// Base API URL is configurable via VITE_API_BASE_URL (Vite) or REACT_APP_API_URL (CRA).
+// Falls back to production backend URL when deployed on Render Static Site (preventing relative 404s),
+// or to '/api' (proxied by Vite dev server to http://localhost:8000) when running locally.
+const resolveApiBaseUrl = () => {
+  // 1. Vite build-time environment variable (Render Static Site dashboard)
+  const envVite = import.meta.env?.VITE_API_BASE_URL;
+  if (envVite && typeof envVite === 'string' && envVite.trim() !== '') {
+    return envVite.trim();
+  }
+
+  // 2. CRA style environment variable
+  if (typeof process !== 'undefined' && process.env?.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL.trim();
+  }
+
+  // 3. Browser runtime overrides (window or localStorage)
+  if (typeof window !== 'undefined') {
+    if (window.__KNOWLEDGEGUARD_API_URL__ && typeof window.__KNOWLEDGEGUARD_API_URL__ === 'string') {
+      return window.__KNOWLEDGEGUARD_API_URL__.trim();
+    }
+    try {
+      const stored = window.localStorage?.getItem('VITE_API_BASE_URL');
+      if (stored && stored.trim() !== '') {
+        return stored.trim();
+      }
+    } catch (_) {}
+
+    // 4. Production Render Fallback:
+    // When running on Render (e.g. knowledgeguardai-1.onrender.com), avoid relative paths
+    // which target the static host and throw 404s. Fall back to backend instance:
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      // If frontend is 'knowledgeguardai-1.onrender.com', backend is 'knowledgeguardai.onrender.com'
+      if (hostname.includes('knowledgeguardai-1')) {
+        return 'https://knowledgeguardai.onrender.com/api';
+      }
+      return 'https://knowledgeguard-backend.onrender.com/api';
+    }
+  }
+
+  // 5. Local development default (proxied by Vite to http://localhost:8000)
+  return '/api';
+};
+
+const rawBaseUrl = resolveApiBaseUrl();
 const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+
+console.info(`[KnowledgeGuard AI] Active API Base URL: ${API_BASE_URL}`);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -12,6 +56,7 @@ const apiClient = axios.create({
   },
   timeout: 60000, // 60s timeout to allow for LLM and agent investigations
 });
+
 
 // Response interceptor for clear developer & user notifications on network or cold start issues
 apiClient.interceptors.response.use(

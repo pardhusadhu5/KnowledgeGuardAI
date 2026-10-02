@@ -31,17 +31,29 @@ if cors_origins_raw == "*":
     origins = ["*"]
 else:
     origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
-if not origins:
-    origins = ["*"]
+
+# Explicitly ensure https://knowledgeguardai-1.onrender.com and other frontend origins are permitted
+default_production_origins = [
+    "https://knowledgeguardai-1.onrender.com",
+    "https://knowledgeguardai.onrender.com",
+    "https://knowledgeguard-frontend.onrender.com",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+for default_origin in default_production_origins:
+    if default_origin not in origins and "*" not in origins:
+        origins.append(default_origin)
 
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True if origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 
