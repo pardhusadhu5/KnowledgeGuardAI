@@ -25,37 +25,31 @@ app = FastAPI(
 )
 
 
-# Parse CORS origins from settings (supports CORS_ORIGINS and FRONTEND_URL)
-origins_set = set()
+# Parse CORS origins (explicitly allows production frontend and local dev)
+origins_set = {
+    "https://knowledgeguardai-1.onrender.com",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://knowledgeguardai.onrender.com",
+}
 
-# Process CORS_ORIGINS (comma-separated string)
+# Incorporate any custom origins defined in environment variables
 if settings.CORS_ORIGINS:
     for item in settings.CORS_ORIGINS.split(","):
         cleaned = item.strip().rstrip("/")
-        if cleaned:
+        if cleaned and cleaned != "*":
             origins_set.add(cleaned)
 
-# Process FRONTEND_URL (supports single or comma-separated URLs)
 if settings.FRONTEND_URL:
     for item in settings.FRONTEND_URL.split(","):
         cleaned = item.strip().rstrip("/")
-        if cleaned:
+        if cleaned and cleaned != "*":
             origins_set.add(cleaned)
 
-# Always guarantee production and local development origins
-default_production_origins = [
-    "https://knowledgeguardai-1.onrender.com",
-    "https://knowledgeguardai.onrender.com",
-    "https://knowledgeguard-frontend.onrender.com",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-for default_origin in default_production_origins:
-    origins_set.add(default_origin.rstrip("/"))
+origins = sorted(list(origins_set))
+logger.info(f"Configured CORS allowed origins: {origins}")
 
-origins = list(origins_set)
-
-# Enable CORS for frontend integration
+# Attach CORSMiddleware to the main FastAPI application served by Uvicorn
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
