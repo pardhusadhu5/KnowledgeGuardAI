@@ -88,10 +88,7 @@ def health_check():
     """Simple, lightweight health check endpoint for Render service liveness verification."""
     return {
         "status": "healthy",
-        "service": settings.PROJECT_NAME,
-        "env": settings.ENV,
-        "database": "SQLite" if is_sqlite else "PostgreSQL",
-        "vector_store": "ChromaDB"
+        "service": "KnowledgeGuard AI backend"
     }
 
 
