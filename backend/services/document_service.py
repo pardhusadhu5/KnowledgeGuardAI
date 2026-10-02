@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 from pathlib import Path
 from typing import Dict, Any, List
@@ -34,10 +35,14 @@ class DocumentService:
         if not file_bytes:
             raise ValueError("Uploaded file is empty.")
 
-        # Save to disk for text extraction
+        logger.info(f"[Diagnostic: PDF Received] '{filename}' ({len(file_bytes)} bytes)")
+
+        # Ensure upload directory exists safely
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         safe_filename = Path(filename).name
-        dest_path = UPLOAD_DIR / safe_filename
+        # Use collision-safe file path
+        unique_prefix = f"doc_{int(time.time())}"
+        dest_path = UPLOAD_DIR / f"{unique_prefix}_{safe_filename}"
         with open(dest_path, "wb") as f:
             f.write(file_bytes)
 
@@ -51,15 +56,18 @@ class DocumentService:
             document_date=document_date,
             status="processing"
         )
+        logger.info(f"[Diagnostic: Database Initialized] Document record created with ID={doc.id}, status='processing'")
 
         try:
             # 2. Extract & clean text
             cleaned_text, doc_type = extract_text_from_file(dest_path)
+            logger.info(f"[Diagnostic: PDF Text Extracted] Extracted {len(cleaned_text)} characters (type={doc_type}) from '{safe_filename}'")
             
             # 3. Split into chunks
             chunks = split_text_into_chunks(cleaned_text, chunk_size=380, chunk_overlap=50)
             if not chunks:
                 raise ValueError("No readable text chunks could be extracted from document.")
+            logger.info(f"[Diagnostic: Chunks Created] Generated {len(chunks)} chunks from '{safe_filename}'")
 
             # 4. Save chunks in DB
             for idx, chunk_text in enumerate(chunks):
@@ -76,8 +84,11 @@ class DocumentService:
                         "filename": doc.filename
                     }
                 )
+            logger.info(f"[Diagnostic: Database Metadata Saved] Saved {len(chunks)} chunks to relational database for doc_id={doc.id}")
 
             # 5. Index into ChromaDB vector store
+            logger.info(f"[Diagnostic: Embedding Started] Generating vector embeddings for {len(chunks)} chunk(s)...")
+            logger.info(f"[Diagnostic: ChromaDB Insertion Started] Inserting chunks into ChromaDB collection...")
             vector_store.add_chunks(
                 document_id=doc.id,
                 chunks=chunks,
@@ -89,19 +100,27 @@ class DocumentService:
                     "filename": doc.filename
                 }
             )
+            logger.info(f"[Diagnostic: ChromaDB Insertion Completed] {len(chunks)} vector chunks indexed in ChromaDB")
 
             # 6. Mark ready
             doc.status = "ready"
             db.commit()
             db.refresh(doc)
-            logger.info(f"Successfully processed document '{safe_filename}' (id={doc.id}, chunks={len(chunks)})")
+            logger.info(f"[Diagnostic: Success] Successfully processed and indexed document '{safe_filename}' (id={doc.id})")
             return doc
 
         except Exception as e:
-            logger.error(f"Error processing document '{safe_filename}': {e}")
+            logger.error(f"[Diagnostic: Failure] Error processing document '{safe_filename}': {e}", exc_info=True)
             doc.status = "error"
             db.commit()
             raise
+        finally:
+            # Safe cleanup of temporary upload file
+            try:
+                if dest_path.exists():
+                    dest_path.unlink()
+            except Exception:
+                pass
 
     def remove_document(self, doc_id: int, db: Session) -> bool:
         doc = get_document_by_id(db, doc_id)

@@ -36,6 +36,13 @@ async def upload_document(
         if len(content) == 0:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
+        max_upload_size = 15 * 1024 * 1024  # 15 MB
+        if len(content) > max_upload_size:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File size exceeds the 15MB limit ({round(len(content) / (1024 * 1024), 1)}MB uploaded)."
+            )
+
         doc_entity = document_service.process_and_save_upload(
             file_bytes=content,
             filename=file.filename,

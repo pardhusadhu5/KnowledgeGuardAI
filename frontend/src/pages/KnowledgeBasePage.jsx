@@ -17,11 +17,11 @@ import {
 import api from '../services/api';
 
 const UPLOAD_STAGES = [
-  'Uploading...',
-  'Extracting text...',
-  'Creating chunks...',
-  'Generating embeddings...',
-  'Indexing knowledge...',
+  'Uploading document...',
+  'Extracting PDF text...',
+  'Creating knowledge embeddings...',
+  'Indexing document...',
+  'Document added to knowledge base.',
   'Complete'
 ];
 
@@ -107,8 +107,18 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
         setUploadStage(0);
       }, 1000);
     } catch (err) {
+      clearInterval(interval);
       setUploading(false);
-      setErrorMessage(err.response?.data?.detail || 'Failed to process and index document.');
+      const detail = err.response?.data?.detail;
+      if (detail) {
+        setErrorMessage(detail);
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setErrorMessage('Upload timed out. If the backend is waking from hibernation, please retry in 10-20 seconds.');
+      } else if (err.message === 'Network Error') {
+        setErrorMessage('Network Error communicating with backend. If waking from cold sleep, please wait a moment and try again.');
+      } else {
+        setErrorMessage(err.message || 'Failed to process and index document.');
+      }
     }
   };
 
