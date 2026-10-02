@@ -100,19 +100,21 @@ If you prefer provisioning each service individually via the Render web console:
      ```
    - **Start Command**:
      ```bash
-     uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+     python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
      ```
    - **Health Check Path**: `/health`
 
 4. Add **Environment Variables**:
    | Key | Value | Description |
    |---|---|---|
+   | `PYTHONPATH` | `.` | Ensures Python package resolution for `backend` |
    | `PYTHON_VERSION` | `3.11.9` | Recommended Python runtime |
    | `ENV` | `production` | Environment mode |
    | `LLM_PROVIDER` | `groq` | Centralized LLM provider |
    | `GROQ_API_KEY` | `gsk_...` | Your Groq API key |
    | `LLM_MODEL` | `openai/gpt-oss-120b` | Production LLM model |
    | `DATABASE_URL` | Paste your PostgreSQL connection URL | Automatically normalized by `db.py` |
+
    | `CHROMA_PERSIST_DIR` | `/var/data/chromadb` | Location of Chroma persistent index |
    | `CORS_ORIGINS` | `https://knowledgeguard-frontend.onrender.com,http://localhost:5173` | Allowed origins |
 5. **Attach Persistent Disk (ChromaDB Persistence)**:

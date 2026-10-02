@@ -1,7 +1,16 @@
+import sys
+from pathlib import Path
+
+# Ensure repository root is on sys.path regardless of execution entrypoint
+_ROOT_DIR = str(Path(__file__).resolve().parent.parent)
+if _ROOT_DIR not in sys.path:
+    sys.path.insert(0, _ROOT_DIR)
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+
 from backend.utils.config import settings
 from backend.utils.logger import get_logger
 from backend.database.db import init_db, engine, is_sqlite
