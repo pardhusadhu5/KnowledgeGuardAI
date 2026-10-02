@@ -3,7 +3,7 @@ services:
   # 1. FastAPI Backend Web Service
   # ----------------------------------------------------------------------------
   - type: web
-    name: knowledgeguard-backend
+    name: knowledgeguardai
     runtime: python
     region: oregon
     plan: free
@@ -30,7 +30,7 @@ services:
           name: knowledgeguard-postgres
           property: connectionString
       - key: CORS_ORIGINS
-        value: "http://localhost:5173,http://127.0.0.1:5173,https://knowledgeguard-frontend.onrender.com,https://knowledgeguardai-1.onrender.com"
+        value: "http://localhost:5173,http://127.0.0.1:5173,https://knowledgeguardai-1.onrender.com,https://knowledgeguardai.onrender.com"
       - key: CHROMA_PERSIST_DIR
         value: ./data/chromadb
 
@@ -38,7 +38,7 @@ services:
   # 2. React + Vite Frontend Static Site
   # ----------------------------------------------------------------------------
   - type: static
-    name: knowledgeguard-frontend
+    name: knowledgeguardai-1
     region: oregon
     plan: free
     rootDir: frontend
