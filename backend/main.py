@@ -25,14 +25,24 @@ app = FastAPI(
 )
 
 
-# Parse CORS origins from settings
-cors_origins_raw = settings.CORS_ORIGINS.strip()
-if cors_origins_raw == "*":
-    origins = ["*"]
-else:
-    origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
+# Parse CORS origins from settings (supports CORS_ORIGINS and FRONTEND_URL)
+origins_set = set()
 
-# Explicitly ensure https://knowledgeguardai-1.onrender.com and other frontend origins are permitted
+# Process CORS_ORIGINS (comma-separated string)
+if settings.CORS_ORIGINS:
+    for item in settings.CORS_ORIGINS.split(","):
+        cleaned = item.strip().rstrip("/")
+        if cleaned:
+            origins_set.add(cleaned)
+
+# Process FRONTEND_URL (supports single or comma-separated URLs)
+if settings.FRONTEND_URL:
+    for item in settings.FRONTEND_URL.split(","):
+        cleaned = item.strip().rstrip("/")
+        if cleaned:
+            origins_set.add(cleaned)
+
+# Always guarantee production and local development origins
 default_production_origins = [
     "https://knowledgeguardai-1.onrender.com",
     "https://knowledgeguardai.onrender.com",
@@ -41,18 +51,20 @@ default_production_origins = [
     "http://127.0.0.1:5173",
 ]
 for default_origin in default_production_origins:
-    if default_origin not in origins and "*" not in origins:
-        origins.append(default_origin)
+    origins_set.add(default_origin.rstrip("/"))
+
+origins = list(origins_set)
 
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_origin_regex=r"https://.*\.onrender\.com",
-    allow_credentials=True if origins != ["*"] else False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 

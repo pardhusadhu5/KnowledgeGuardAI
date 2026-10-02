@@ -47,7 +47,9 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     DEBUG: bool = False
+    FRONTEND_URL: str = "https://knowledgeguardai-1.onrender.com"
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,https://knowledgeguardai-1.onrender.com,https://knowledgeguardai.onrender.com,https://knowledgeguard-frontend.onrender.com"
+
 
     def get_effective_api_key(self) -> str:
         prov = self.LLM_PROVIDER.lower()

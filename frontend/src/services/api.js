@@ -4,8 +4,8 @@ import axios from 'axios';
 // Falls back to production backend URL when deployed on Render Static Site (preventing relative 404s),
 // or to '/api' (proxied by Vite dev server to http://localhost:8000) when running locally.
 const resolveApiBaseUrl = () => {
-  // 1. Vite build-time environment variable (Render Static Site dashboard)
-  const envVite = import.meta.env?.VITE_API_BASE_URL;
+  // 1. Vite build-time environment variable (VITE_API_URL or VITE_API_BASE_URL)
+  const envVite = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envVite && typeof envVite === 'string' && envVite.trim() !== '') {
     return envVite.trim();
   }
@@ -21,11 +21,12 @@ const resolveApiBaseUrl = () => {
       return window.__KNOWLEDGEGUARD_API_URL__.trim();
     }
     try {
-      const stored = window.localStorage?.getItem('VITE_API_BASE_URL');
+      const stored = window.localStorage?.getItem('VITE_API_URL') || window.localStorage?.getItem('VITE_API_BASE_URL');
       if (stored && stored.trim() !== '') {
         return stored.trim();
       }
     } catch (_) {}
+
 
     // 4. Production Render Fallback:
     // When running on Render (e.g. knowledgeguardai-1.onrender.com), avoid relative paths
