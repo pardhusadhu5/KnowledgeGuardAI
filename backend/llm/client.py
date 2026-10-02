@@ -1,3 +1,4 @@
+import os
 import json
 import re
 from typing import List, Dict, Any, Optional
@@ -10,9 +11,32 @@ logger = get_logger("llm_client")
 
 class LLMClient:
     def __init__(self):
-        self.provider = settings.LLM_PROVIDER.lower() if settings.LLM_PROVIDER else "gemini"
-        self.model = settings.LLM_MODEL or "gemini-1.5-flash"
         self.base_url = settings.LLM_BASE_URL or None
+
+    @property
+    def provider(self) -> str:
+        key = self.get_api_key()
+        groq_k = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "")
+        gemini_k = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
+        openai_k = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY", "")
+        if key and groq_k and key == groq_k:
+            return "groq"
+        if key and gemini_k and key == gemini_k:
+            return "gemini"
+        if key and openai_k and key == openai_k:
+            return "openai"
+        return (settings.LLM_PROVIDER or "groq").lower()
+
+    @property
+    def model(self) -> str:
+        prov = self.provider
+        if settings.LLM_MODEL and settings.LLM_MODEL != "gemini-1.5-flash":
+            return settings.LLM_MODEL
+        if prov == "groq":
+            return "openai/gpt-oss-120b"
+        elif prov == "gemini":
+            return "gemini-1.5-flash"
+        return "gpt-4o-mini"
 
     def get_api_key(self) -> str:
         return settings.get_effective_api_key()

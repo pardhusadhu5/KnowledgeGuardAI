@@ -21,13 +21,13 @@ class Settings(BaseSettings):
     ENV: str = "development"
     
     # LLM Provider Configuration
-    # Options: gemini | openai | groq
-    LLM_PROVIDER: str = "gemini"
+    # Options: groq | gemini | openai
+    LLM_PROVIDER: str = "groq"
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     LLM_API_KEY: str = ""  # general fallback key
-    LLM_MODEL: str = "gemini-1.5-flash"
+    LLM_MODEL: str = "openai/gpt-oss-120b"
     LLM_BASE_URL: str = ""
     
     # Chroma & Vector Storage Settings
@@ -52,14 +52,31 @@ class Settings(BaseSettings):
 
 
     def get_effective_api_key(self) -> str:
-        prov = self.LLM_PROVIDER.lower()
-        if prov == "gemini":
-            return self.GEMINI_API_KEY or self.LLM_API_KEY or os.environ.get("GEMINI_API_KEY", "")
-        elif prov == "groq":
-            return self.GROQ_API_KEY or self.LLM_API_KEY or os.environ.get("GROQ_API_KEY", "")
+        # Check active provider first
+        prov = (self.LLM_PROVIDER or "groq").lower()
+        if prov == "groq":
+            key = self.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "") or self.LLM_API_KEY
+            if key and not key.startswith("your_"):
+                return key.strip()
+        elif prov == "gemini":
+            key = self.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "") or self.LLM_API_KEY
+            if key and not key.startswith("your_"):
+                return key.strip()
         elif prov == "openai":
-            return self.OPENAI_API_KEY or self.LLM_API_KEY or os.environ.get("OPENAI_API_KEY", "")
-        return self.LLM_API_KEY
+            key = self.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY", "") or self.LLM_API_KEY
+            if key and not key.startswith("your_"):
+                return key.strip()
+
+        # Automatic cross-provider fallback
+        for candidate_key in [
+            self.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", ""),
+            self.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", ""),
+            self.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY", ""),
+            self.LLM_API_KEY or os.environ.get("LLM_API_KEY", "")
+        ]:
+            if candidate_key and len(candidate_key.strip()) > 5 and not candidate_key.strip().startswith("your_"):
+                return candidate_key.strip()
+        return ""
     
     class Config:
         env_file = (str(BASE_DIR / ".env"), str(BACKEND_DIR / ".env"))
