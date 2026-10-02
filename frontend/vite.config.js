@@ -8,11 +8,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+      '/documents': 'http://localhost:8000',
+      '/investigate': 'http://localhost:8000',
+      '/investigations': 'http://localhost:8000',
+      '/dashboard': 'http://localhost:8000',
+      '/evaluation': 'http://localhost:8000',
+      '/health': 'http://localhost:8000',
     },
   },
 })

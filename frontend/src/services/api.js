@@ -4,45 +4,41 @@ import axios from 'axios';
 // Falls back to production backend URL when deployed on Render Static Site (preventing relative 404s),
 // or to '/api' (proxied by Vite dev server to http://localhost:8000) when running locally.
 const resolveApiBaseUrl = () => {
+  const sanitize = (url) => url.trim().replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
   // 1. Vite build-time environment variable (VITE_API_URL or VITE_API_BASE_URL)
   const envVite = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envVite && typeof envVite === 'string' && envVite.trim() !== '') {
-    return envVite.trim();
+    return sanitize(envVite);
   }
 
   // 2. CRA style environment variable
   if (typeof process !== 'undefined' && process.env?.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL.trim();
+    return sanitize(process.env.REACT_APP_API_URL);
   }
 
   // 3. Browser runtime overrides (window or localStorage)
   if (typeof window !== 'undefined') {
     if (window.__KNOWLEDGEGUARD_API_URL__ && typeof window.__KNOWLEDGEGUARD_API_URL__ === 'string') {
-      return window.__KNOWLEDGEGUARD_API_URL__.trim();
+      return sanitize(window.__KNOWLEDGEGUARD_API_URL__);
     }
     try {
       const stored = window.localStorage?.getItem('VITE_API_URL') || window.localStorage?.getItem('VITE_API_BASE_URL');
       if (stored && stored.trim() !== '') {
-        return stored.trim();
+        return sanitize(stored);
       }
     } catch (_) {}
 
-
     // 4. Production Render Fallback:
-    // When running on Render (e.g. knowledgeguardai-1.onrender.com), avoid relative paths
-    // which target the static host and throw 404s. Fall back to backend instance:
+    // When running on Render (e.g. knowledgeguardai-1.onrender.com), target production backend root:
     const hostname = window.location.hostname;
     if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      // If frontend is 'knowledgeguardai-1.onrender.com', backend is 'knowledgeguardai.onrender.com'
-      if (hostname.includes('knowledgeguardai-1')) {
-        return 'https://knowledgeguardai.onrender.com/api';
-      }
-      return 'https://knowledgeguard-backend.onrender.com/api';
+      return 'https://knowledgeguardai.onrender.com';
     }
   }
 
-  // 5. Local development default (proxied by Vite to http://localhost:8000)
-  return '/api';
+  // 5. Local development default
+  return 'http://localhost:8000';
 };
 
 const rawBaseUrl = resolveApiBaseUrl();

@@ -79,11 +79,9 @@ def on_startup():
 
 # Mount API routers
 app.include_router(api_router)
-app.include_router(api_router, prefix="/api")  # supports both direct and /api prefixed routes
 
 
 @app.get("/health", tags=["Health"])
-@app.get("/api/health", tags=["Health"])
 def health_check():
     """Simple, lightweight health check endpoint for Render service liveness verification."""
     return {
