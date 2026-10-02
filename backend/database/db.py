@@ -20,6 +20,7 @@ else:
     # PostgreSQL connection pooling and health checks for production
     engine_kwargs["pool_pre_ping"] = True
     engine_kwargs["pool_recycle"] = 300
+    engine_kwargs["connect_args"] = {"connect_timeout": 10}
 
 engine = create_engine(raw_db_url, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

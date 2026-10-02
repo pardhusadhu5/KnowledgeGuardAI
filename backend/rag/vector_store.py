@@ -12,6 +12,15 @@ COLLECTION_NAME = settings.COLLECTION_NAME
 
 class VectorStoreManager:
     def __init__(self):
+        self._initialized = False
+        self.client = None
+        self.embedding_function = None
+        self.collection = None
+
+    def _ensure_initialized(self):
+        if self._initialized and self.collection is not None:
+            return
+        logger.info("Initializing ChromaDB vector store and embedding engine...")
         if settings.CHROMA_SERVER_HOST:
             headers = {"X-Chroma-Token": settings.CHROMA_AUTH_TOKEN} if settings.CHROMA_AUTH_TOKEN else None
             self.client = chromadb.HttpClient(
@@ -30,6 +39,7 @@ class VectorStoreManager:
             logger.info(f"Initialized ChromaDB PersistentClient at: {settings.CHROMA_PERSIST_DIR}")
         self.embedding_function = get_embedding_function()
         self._get_or_create_collection()
+        self._initialized = True
 
     def _get_or_create_collection(self):
         try:
@@ -66,6 +76,7 @@ class VectorStoreManager:
     ) -> List[str]:
         if not chunks:
             return []
+        self._ensure_initialized()
 
         ids = [f"doc_{document_id}_chunk_{i}" for i in range(len(chunks))]
         metadatas = []
@@ -95,6 +106,7 @@ class VectorStoreManager:
         n_results: int = 5,
         where_filter: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
+        self._ensure_initialized()
         total_items = self.collection.count()
         if total_items == 0:
             return []
@@ -142,16 +154,23 @@ class VectorStoreManager:
 
     def delete_document_chunks(self, document_id: int):
         try:
+            self._ensure_initialized()
             self.collection.delete(where={"document_id": document_id})
             logger.info(f"Deleted vector chunks for document_id={document_id}")
         except Exception as e:
             logger.warning(f"Failed to delete Chroma chunks for doc {document_id}: {e}")
 
     def count(self) -> int:
-        return self.collection.count()
+        try:
+            self._ensure_initialized()
+            return self.collection.count()
+        except Exception as e:
+            logger.warning(f"Error querying ChromaDB count: {e}")
+            return 0
 
     def reset_collection(self):
         try:
+            self._ensure_initialized()
             self.client.delete_collection(COLLECTION_NAME)
         except Exception:
             pass
