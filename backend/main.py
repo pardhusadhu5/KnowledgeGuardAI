@@ -78,18 +78,19 @@ def on_startup():
     logger.info(f"  Chroma collection:{storage_summary['collection_name']}")
     logger.info(f"  Upload Storage:   {storage_summary['upload_storage']}")
     logger.info("=" * 60)
-
     # Fail fast in production if required persistent production storage is unconfigured
     if settings.is_production:
-        if not settings.DATABASE_URL:
+        if not settings.DATABASE_URL and not settings.ALLOW_LOCAL_SQLITE:
             raise RuntimeError(
                 "Configuration Error: DATABASE_URL is not configured in production environment. "
-                "KnowledgeGuard AI requires a persistent PostgreSQL (e.g. Neon) database connection."
+                "KnowledgeGuard AI requires a persistent PostgreSQL (e.g. Neon) database connection. "
+                "Set ALLOW_LOCAL_SQLITE=true to permit local SQLite in production."
             )
-        if not settings.CHROMA_SERVER_HOST:
+        if not settings.CHROMA_SERVER_HOST and not settings.ALLOW_LOCAL_CHROMA:
             raise RuntimeError(
                 "Configuration Error: CHROMA_SERVER_HOST is not configured in production environment. "
-                "KnowledgeGuard AI requires a production ChromaDB server in production mode."
+                "KnowledgeGuard AI requires a production ChromaDB server in production mode. "
+                "Set ALLOW_LOCAL_CHROMA=true to permit local persistent ChromaDB in production."
             )
 
     init_db()

@@ -40,11 +40,11 @@ class VectorStoreManager:
                     "Refusing to silently fallback to local ephemeral storage."
                 ) from e
         else:
-            if settings.is_production:
+            if settings.is_production and not settings.ALLOW_LOCAL_CHROMA:
                 raise RuntimeError(
                     "Configuration Error: CHROMA_SERVER_HOST must be configured in production environment. "
                     "KnowledgeGuard AI requires a production ChromaDB server in production mode. "
-                    "Refusing to silently fallback to local ephemeral storage."
+                    "Set ALLOW_LOCAL_CHROMA=true to permit local persistent ChromaDB in production."
                 )
             logger.info(f"[vector_store] Mode: LOCAL_CHROMA (persist_dir={settings.CHROMA_PERSIST_DIR})")
             Path(settings.CHROMA_PERSIST_DIR).mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ class VectorStoreManager:
     def check_health(self) -> bool:
         """Lightweight check to verify vector store connectivity without model inference."""
         try:
-            if settings.is_production and not settings.is_remote_chroma:
+            if settings.is_production and not settings.is_remote_chroma and not settings.ALLOW_LOCAL_CHROMA:
                 logger.error("Health check failed: CHROMA_SERVER_HOST is not configured in production mode.")
                 return False
 

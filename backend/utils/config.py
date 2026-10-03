@@ -56,11 +56,13 @@ class Settings(BaseSettings):
     CHROMA_SERVER_PORT: int = 8000
     CHROMA_SERVER_SSL: bool = False
     CHROMA_AUTH_TOKEN: str = ""
+    ALLOW_LOCAL_CHROMA: bool = True
     
     # Relational Database Configuration
     # When empty or unset: defaults cleanly to local SQLite (data/knowledgeguard.db)
     # When postgresql:// or postgres://: seamlessly connects to production PostgreSQL
     DATABASE_URL: str = ""
+    ALLOW_LOCAL_SQLITE: bool = True
 
     # Server & Networking
     HOST: str = "0.0.0.0"
@@ -82,10 +84,11 @@ class Settings(BaseSettings):
     def effective_database_url(self) -> str:
         raw = (self.DATABASE_URL or "").strip()
         if not raw:
-            if self.is_production:
+            if self.is_production and not self.ALLOW_LOCAL_SQLITE:
                 raise RuntimeError(
                     "Configuration Error: DATABASE_URL must be configured in production environment. "
-                    "KnowledgeGuard AI requires a persistent PostgreSQL (e.g., Neon) database connection."
+                    "KnowledgeGuard AI requires a persistent PostgreSQL (e.g., Neon) database connection. "
+                    "Set ALLOW_LOCAL_SQLITE=true to permit local SQLite in production."
                 )
             return f"sqlite:///{SQLITE_DB_PATH}"
 
