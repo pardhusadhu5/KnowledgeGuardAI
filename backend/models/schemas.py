@@ -45,8 +45,8 @@ class EvidenceItem(BaseModel):
 
 
 class InvestigationStep(BaseModel):
-    step_name: str
-    description: str
+    step_name: str = "Investigation Step"
+    description: str = ""
     status: str = "completed"  # pending, running, completed, skipped
     details: Optional[Dict[str, Any]] = None
 

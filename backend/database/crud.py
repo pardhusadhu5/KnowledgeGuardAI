@@ -165,10 +165,25 @@ def add_evidence_to_investigation(
     page: int = 1,
     is_stored_knowledge: bool = False
 ) -> EvidenceEntity:
+    # Foreign key safety for PostgreSQL: verify referenced IDs exist before linking
+    valid_doc_id = None
+    if document_id is not None:
+        if db.query(DocumentEntity.id).filter(DocumentEntity.id == document_id).first():
+            valid_doc_id = document_id
+        else:
+            logger.warning(f"Referenced document_id {document_id} not found in database; setting evidence document_id to NULL to prevent FK violation.")
+
+    valid_chunk_id = None
+    if chunk_id is not None:
+        if db.query(KnowledgeChunkEntity.id).filter(KnowledgeChunkEntity.id == chunk_id).first():
+            valid_chunk_id = chunk_id
+        else:
+            logger.warning(f"Referenced chunk_id {chunk_id} not found in database; setting evidence chunk_id to NULL to prevent FK violation.")
+
     ev = EvidenceEntity(
         investigation_id=investigation_id,
-        document_id=document_id,
-        chunk_id=chunk_id,
+        document_id=valid_doc_id,
+        chunk_id=valid_chunk_id,
         evidence_text=evidence_text,
         relevance_score=relevance_score,
         source=source,
@@ -183,51 +198,93 @@ def add_evidence_to_investigation(
     return ev
 
 
+def _parse_steps(raw_steps: Any) -> List[InvestigationStep]:
+    """Safely normalizes and parses agent execution steps from JSON metadata."""
+    if not isinstance(raw_steps, list):
+        return []
+    parsed = []
+    for s in raw_steps:
+        try:
+            if isinstance(s, dict):
+                step_name = (
+                    s.get("step_name")
+                    or s.get("name")
+                    or (f"Step {s['step']}" if "step" in s else None)
+                    or "Investigation Step"
+                )
+                desc = s.get("description") or s.get("desc") or ""
+                status = s.get("status") or "completed"
+                details = s.get("details") if isinstance(s.get("details"), dict) else None
+                parsed.append(InvestigationStep(
+                    step_name=str(step_name),
+                    description=str(desc),
+                    status=str(status),
+                    details=details
+                ))
+            elif isinstance(s, str):
+                parsed.append(InvestigationStep(
+                    step_name="Agent Action",
+                    description=str(s),
+                    status="completed"
+                ))
+        except Exception:
+            continue
+    return parsed
+
+
+def _parse_evidences(evidences: Any) -> List[EvidenceItem]:
+    """Safely constructs EvidenceItem objects from ORM entities."""
+    items = []
+    for e in evidences:
+        try:
+            items.append(EvidenceItem(
+                id=e.id,
+                document_id=e.document_id,
+                chunk_id=e.chunk_id,
+                evidence_text=e.evidence_text or "",
+                relevance_score=float(e.relevance_score or 0.0),
+                source=e.source or "",
+                version=e.version or "",
+                date=e.date or "",
+                page=int(getattr(e, "page", 1) or 1),
+                is_stored_knowledge=bool(getattr(e, "is_stored_knowledge", False))
+            ))
+        except Exception:
+            continue
+    return items
+
+
 def get_investigations(db: Session, skip: int = 0, limit: int = 100) -> List[InvestigationResponse]:
     invs = db.query(InvestigationEntity).order_by(desc(InvestigationEntity.created_at)).offset(skip).limit(limit).all()
     results = []
     for inv in invs:
-        ev_items = [
-            EvidenceItem(
-                id=e.id,
-                document_id=e.document_id,
-                chunk_id=e.chunk_id,
-                evidence_text=e.evidence_text,
-                relevance_score=e.relevance_score,
-                source=e.source,
-                version=e.version,
-                date=e.date,
-                page=getattr(e, "page", 1) or 1,
-                is_stored_knowledge=e.is_stored_knowledge
-            )
-            for e in inv.evidences
-        ]
+        ev_items = _parse_evidences(inv.evidences)
         meta = {}
         try:
             meta = json.loads(inv.metadata_json) if inv.metadata_json else {}
         except Exception:
             pass
         
-        steps = [InvestigationStep(**s) for s in meta.get("steps", [])]
+        steps = _parse_steps(meta.get("steps", []) if isinstance(meta, dict) else [])
         results.append(InvestigationResponse(
             id=inv.id,
-            claim=inv.claim,
-            classification=inv.classification,
-            explanation=inv.explanation,
-            confidence=inv.confidence,
-            recommendation=inv.recommendation,
-            human_verification_required=inv.human_verification_required,
+            claim=inv.claim or "",
+            classification=inv.classification or "UNCERTAIN",
+            explanation=inv.explanation or "",
+            confidence=float(inv.confidence or 0.0),
+            recommendation=inv.recommendation or "",
+            human_verification_required=bool(inv.human_verification_required),
             human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
             execution_time_ms=float(getattr(inv, "execution_time_ms", 0.0) or 0.0),
             research_occurred=bool(getattr(inv, "research_occurred", False)),
-            retrieval_attempts=int(meta.get("retrieval_attempts", 1)),
-            unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1)),
-            evidence_sufficient=bool(meta.get("evidence_sufficient", True)),
+            retrieval_attempts=int(meta.get("retrieval_attempts", 1) if isinstance(meta, dict) else 1),
+            unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1) if isinstance(meta, dict) else 1),
+            evidence_sufficient=bool(meta.get("evidence_sufficient", True) if isinstance(meta, dict) else True),
             created_at=inv.created_at,
             evidences=ev_items,
             steps=steps,
-            comparison=meta.get("comparison", ""),
-            structured_explanation=meta.get("structured_explanation")
+            comparison=meta.get("comparison", "") if isinstance(meta, dict) else "",
+            structured_explanation=meta.get("structured_explanation") if (isinstance(meta, dict) and isinstance(meta.get("structured_explanation"), dict)) else None
         ))
     return results
 
@@ -236,48 +293,35 @@ def get_investigation_by_id(db: Session, inv_id: int) -> Optional[InvestigationR
     inv = db.query(InvestigationEntity).filter(InvestigationEntity.id == inv_id).first()
     if not inv:
         return None
-    ev_items = [
-        EvidenceItem(
-            id=e.id,
-            document_id=e.document_id,
-            chunk_id=e.chunk_id,
-            evidence_text=e.evidence_text,
-            relevance_score=e.relevance_score,
-            source=e.source,
-            version=e.version,
-            date=e.date,
-            page=getattr(e, "page", 1) or 1,
-            is_stored_knowledge=e.is_stored_knowledge
-        )
-        for e in inv.evidences
-    ]
+    ev_items = _parse_evidences(inv.evidences)
     meta = {}
     try:
         meta = json.loads(inv.metadata_json) if inv.metadata_json else {}
     except Exception:
         pass
     
-    steps = [InvestigationStep(**s) for s in meta.get("steps", [])]
+    steps = _parse_steps(meta.get("steps", []) if isinstance(meta, dict) else [])
     return InvestigationResponse(
         id=inv.id,
-        claim=inv.claim,
-        classification=inv.classification,
-        explanation=inv.explanation,
-        confidence=inv.confidence,
-        recommendation=inv.recommendation,
-        human_verification_required=inv.human_verification_required,
+        claim=inv.claim or "",
+        classification=inv.classification or "UNCERTAIN",
+        explanation=inv.explanation or "",
+        confidence=float(inv.confidence or 0.0),
+        recommendation=inv.recommendation or "",
+        human_verification_required=bool(inv.human_verification_required),
         human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
         execution_time_ms=float(getattr(inv, "execution_time_ms", 0.0) or 0.0),
         research_occurred=bool(getattr(inv, "research_occurred", False)),
-        retrieval_attempts=int(meta.get("retrieval_attempts", 1)),
-        unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1)),
-        evidence_sufficient=bool(meta.get("evidence_sufficient", True)),
+        retrieval_attempts=int(meta.get("retrieval_attempts", 1) if isinstance(meta, dict) else 1),
+        unique_documents=int(meta.get("unique_documents", len(set(e.document_id for e in inv.evidences if e.document_id)) or 1) if isinstance(meta, dict) else 1),
+        evidence_sufficient=bool(meta.get("evidence_sufficient", True) if isinstance(meta, dict) else True),
         created_at=inv.created_at,
         evidences=ev_items,
         steps=steps,
-        comparison=meta.get("comparison", ""),
-        structured_explanation=meta.get("structured_explanation")
+        comparison=meta.get("comparison", "") if isinstance(meta, dict) else "",
+        structured_explanation=meta.get("structured_explanation") if (isinstance(meta, dict) and isinstance(meta.get("structured_explanation"), dict)) else None
     )
+
 
 
 # Dashboard Statistics CRUD
