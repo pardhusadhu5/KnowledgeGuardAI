@@ -7,11 +7,8 @@ from backend.models.entities import Base
 logger = get_logger("database")
 
 # Handle Render's postgres:// URI scheme requirement for SQLAlchemy
-raw_db_url = settings.DATABASE_URL or "sqlite:///data/knowledgeguard.db"
-if raw_db_url.startswith("postgres://"):
-    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
-
-is_sqlite = raw_db_url.startswith("sqlite")
+raw_db_url = settings.effective_database_url
+is_sqlite = not settings.is_postgres
 
 engine_kwargs = {}
 if is_sqlite:
@@ -20,17 +17,34 @@ else:
     # PostgreSQL connection pooling and health checks for production
     engine_kwargs["pool_pre_ping"] = True
     engine_kwargs["pool_recycle"] = 300
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
     engine_kwargs["connect_args"] = {"connect_timeout": 10}
 
 engine = create_engine(raw_db_url, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def check_db_health(db: Session = None) -> bool:
+    """Verifies that the database is responsive via a lightweight query."""
+    try:
+        if db is not None:
+            db.execute(text("SELECT 1"))
+        else:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+        return True
+    except Exception as e:
+        logger.warning(f"Database health check failed: {e}")
+        return False
+
+
 def init_db():
     """Initializes tables and ensures incremental schema migrations across SQLite and PostgreSQL."""
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info(f"Database schema verified on engine: {'SQLite' if is_sqlite else 'PostgreSQL'}")
+        summary = settings.get_safe_storage_summary()
+        logger.info(f"Database schema verified on engine: {summary['database_description']}")
 
         # Universal column verification via SQLAlchemy inspect
         inspector = inspect(engine)

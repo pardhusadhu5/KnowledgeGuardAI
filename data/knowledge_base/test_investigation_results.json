@@ -6,10 +6,10 @@
     "classification": "CURRENT",
     "confidence": 96.0,
     "human_verification_required": true,
-    "execution_time_s": 3.59,
+    "execution_time_s": 3.4,
     "unique_documents": 2,
     "evidence_count": 5,
-    "explanation": "Evidence #1 (2024-04-10 draft Revision 3) explicitly states that the draft will supersede SP 800-61r2 once it is finalized, indicating that Revision 2 remains the authoritative version at present. Evidence #3-5 confirm that Revision 2 was formally published in August 2012 and is the latest finalized release. No evidence shows that Revision 3 has been finalized, so the current authoritative standard is still Revision 2.",
+    "explanation": "Evidence #1 (2024-04-10) describes NIST SP 800-61 Revision 3 (Draft) and explicitly states that it will supersede SP 800-61r2 *once finalized*. No evidence shows that Revision 3 has been finalized or published as an authoritative standard. Evidence #3\u2011#5 confirm that Revision 2 (published 2012-08-01) is the latest *final* version. Therefore, as of the latest dated evidence, Revision 2 remains the current authoritative standard for computer security incident handling.",
     "top_evidence": [
       {
         "source": "National Institute of Standards and Technology (NIST) - NIST SP 800-61r3",
@@ -41,10 +41,10 @@
     "classification": "CURRENT",
     "confidence": 97.0,
     "human_verification_required": true,
-    "execution_time_s": 1.6,
+    "execution_time_s": 1.88,
     "unique_documents": 1,
     "evidence_count": 5,
-    "explanation": "Evidence #1 (page 10) explicitly lists GOVERN alongside IDENTIFY, PROTECT, DETECT, RESPOND, and RECOVER as a CSF 2.0 function, confirming that the new version adds a sixth function. Evidence #4 confirms the document is version 2.0 of the NIST CSF, and no evidence contradicts this addition. Therefore the claim that CSF 2.0 introduces the GOVERN function in addition to the original five functions is supported by the latest authoritative documentation.",
+    "explanation": "Evidence #1 (page 10 of NIST CSF 2.0, dated 2024-02-26) explicitly lists GOVERN as one of the CSF Functions alongside IDENTIFY, PROTECT, DETECT, RESPOND, and RECOVER. This confirms that CSF 2.0 adds a sixth function, GOVERN, to the original five functions defined in CSF 1.1. No evidence contradicts this addition, and the document is the latest authoritative source for CSF 2.0.",
     "top_evidence": [
       {
         "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",
@@ -74,12 +74,12 @@
     "claim": "What are the core functions of the NIST Artificial Intelligence Risk Management Framework (AI RMF 1.0)?",
     "expected": "CURRENT",
     "classification": "CURRENT",
-    "confidence": 98.0,
+    "confidence": 97.0,
     "human_verification_required": true,
-    "execution_time_s": 1.71,
+    "execution_time_s": 1.68,
     "unique_documents": 1,
     "evidence_count": 5,
-    "explanation": "Evidence #4 from the official NIST AI RMF 1.0 document (dated 2023-01-26) explicitly states that the AI RMF Core is composed of four functions: GOVERN, MAP, MEASURE, and MANAGE. This directly answers the claim about the core functions, and no newer or conflicting NIST documents were retrieved that modify or replace these functions.",
+    "explanation": "Evidence #4 (page 25 of NIST AI 100-1 AI RMF 1.0, dated 2023-01-26) explicitly states that the AI RMF Core is composed of four functions: GOVERN, MAP, MEASURE, and MANAGE. This directly answers the claim about the core functions. No newer version or contradictory document is present in the retrieved set, so the information is up\u2011to\u2011date and authoritative.",
     "top_evidence": [
       {
         "source": "National Institute of Standards and Technology (NIST) - NIST AI 100-1",
@@ -111,10 +111,10 @@
     "classification": "OUTDATED",
     "confidence": 96.0,
     "human_verification_required": true,
-    "execution_time_s": 1.78,
+    "execution_time_s": 2.21,
     "unique_documents": 1,
     "evidence_count": 5,
-    "explanation": "The claim states that the NIST Cybersecurity Framework (CSF) applies exclusively to critical infrastructure organizations as defined in CSF version 1.1. The retrieved evidence is from the newer CSF version 2.0 (dated 2024-02-26) and explicitly says the framework is \"designed to help organizations of all sizes and sectors \u2014 including industry, government, academia, and nonprofit\" (Evidence #1, page 5). This directly contradicts the exclusivity assertion and indicates that the newer version supersedes any earlier version that might have limited scope. Since the claim relies on an older interpretation that has been replaced by the broader applicability in version 2.0, it is classified as OUTDATED.",
+    "explanation": "All retrieved evidence is from NIST CSF version 2.0 (dated 2024-02-26). The documents explicitly state that the Framework is designed to help organizations of all sizes and sectors\u2014including industry, government, academia, and nonprofit\u2014rather than being limited to critical infrastructure. No evidence is provided that version 1.1 limited applicability to critical infrastructure, and the newer 2.0 supersedes earlier versions, expanding the scope. Therefore the claim that the CSF applies exclusively to critical infrastructure organizations, as specified in version 1.1, is outdated in light of the current authoritative documentation.",
     "top_evidence": [
       {
         "source": "National Institute of Standards and Technology (NIST) - NIST CSWP 29",

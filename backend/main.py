@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 
 from backend.utils.config import settings
 from backend.utils.logger import get_logger
-from backend.database.db import init_db, engine, is_sqlite, get_db
+from backend.database.db import init_db, engine, is_sqlite, get_db, check_db_health
 from backend.models.entities import DocumentEntity
-from backend.rag.vector_store import vector_store
+from backend.rag.vector_store import vector_store, check_vector_store_health
 from backend.api import api_router
 
 logger = get_logger("main")
@@ -68,8 +68,14 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    db_engine_name = "SQLite" if is_sqlite else "PostgreSQL"
-    logger.info(f"Initializing {db_engine_name} relational database...")
+    storage_summary = settings.get_safe_storage_summary()
+    logger.info("=" * 60)
+    logger.info("KnowledgeGuard AI Storage Configuration:")
+    logger.info(f"  Database:       {storage_summary['database_description']}")
+    logger.info(f"  Vector Store:   {storage_summary['vector_store_description']}")
+    logger.info(f"  Upload Storage: {storage_summary['upload_storage']}")
+    logger.info(f"  Collection:     {storage_summary['collection_name']}")
+    logger.info("=" * 60)
     init_db()
     logger.info(f"KnowledgeGuard AI backend initialized successfully. Environment: {settings.ENV}")
 
@@ -79,37 +85,36 @@ app.include_router(api_router)
 
 
 @app.get("/health", tags=["Health"])
-def health_check():
-    """Simple, lightweight health check endpoint for Render service liveness verification."""
-    return {
-        "status": "healthy",
-        "service": "KnowledgeGuard AI backend"
+def health_check(db: Session = Depends(get_db)):
+    """System health check endpoint verifying core service, database, and vector store availability."""
+    db_ok = check_db_health(db)
+    vec_ok = check_vector_store_health()
+    is_healthy = db_ok and vec_ok
+
+    payload = {
+        "status": "healthy" if is_healthy else "degraded",
+        "service": "KnowledgeGuard AI backend",
+        "database": settings.database_type,
+        "database_healthy": db_ok,
+        "vector_store": settings.vector_store_type,
+        "vector_store_healthy": vec_ok
     }
+    status_code = 200 if is_healthy else 503
+    return JSONResponse(status_code=status_code, content=payload)
 
 
 @app.get("/diagnostic", tags=["Health"])
 def diagnostic_check(db: Session = Depends(get_db)):
     """System diagnostic endpoint reporting database and vector store persistence status."""
-    db_raw = str(settings.DATABASE_URL)
-    db_exists = False
-    doc_count_sqlite = 0
-    db_display_path = db_raw
+    storage_summary = settings.get_safe_storage_summary()
+    doc_count = 0
     try:
-        doc_count_sqlite = db.query(DocumentEntity).count()
-        if is_sqlite:
-            clean_path = db_raw.replace("sqlite:///", "").replace("sqlite://", "")
-            db_exists = Path(clean_path).exists()
-            db_display_path = clean_path
-        else:
-            db_exists = True
-            db_display_path = "postgresql://[credentials_hidden]@" + db_raw.split("@")[-1] if "@" in db_raw else "postgresql://[external]"
+        doc_count = db.query(DocumentEntity).count()
     except Exception as e:
-        logger.warning(f"Diagnostic DB check notice: {e}")
-        db_display_path = "unknown"
+        logger.warning(f"Diagnostic DB count notice: {e}")
 
-    chroma_path = str(settings.CHROMA_PERSIST_DIR)
-    chroma_exists = Path(chroma_path).exists()
-    chroma_collection = settings.COLLECTION_NAME
+    db_exists = check_db_health(db)
+    chroma_exists = check_vector_store_health()
     chroma_vector_count = 0
     try:
         chroma_vector_count = vector_store.count()
@@ -117,13 +122,15 @@ def diagnostic_check(db: Session = Depends(get_db)):
         logger.warning(f"Diagnostic Chroma count notice: {e}")
 
     return {
-        "database_path": db_display_path,
+        "database_type": settings.database_type,
+        "database_path": storage_summary["database_description"],
         "database_exists": db_exists,
-        "document_count_sqlite": doc_count_sqlite,
-        "chroma_path": chroma_path,
+        "document_count_sqlite": doc_count,
+        "chroma_path": storage_summary["vector_store_description"],
         "chroma_exists": chroma_exists,
-        "chroma_collection": chroma_collection,
-        "chroma_vector_count": chroma_vector_count
+        "chroma_collection": settings.effective_collection_name,
+        "chroma_vector_count": chroma_vector_count,
+        "upload_storage": storage_summary["upload_storage"]
     }
 
 

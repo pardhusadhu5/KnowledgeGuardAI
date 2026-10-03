@@ -1,3 +1,4 @@
+from pathlib import Path
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from typing import List, Dict, Any, Optional
@@ -6,8 +7,6 @@ from backend.utils.logger import get_logger
 from backend.rag.embeddings import get_embedding_function
 
 logger = get_logger("vector_store")
-
-COLLECTION_NAME = settings.COLLECTION_NAME
 
 
 class VectorStoreManager:
@@ -20,33 +19,46 @@ class VectorStoreManager:
     def _ensure_initialized(self):
         if self._initialized and self.collection is not None:
             return
-        logger.info("Initializing ChromaDB vector store and embedding engine...")
-        if settings.CHROMA_SERVER_HOST:
+
+        if settings.is_remote_chroma:
+            logger.info(f"[vector_store] Mode: REMOTE_CHROMA (host={settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}, ssl={settings.CHROMA_SERVER_SSL})")
             headers = {"X-Chroma-Token": settings.CHROMA_AUTH_TOKEN} if settings.CHROMA_AUTH_TOKEN else None
-            self.client = chromadb.HttpClient(
-                host=settings.CHROMA_SERVER_HOST,
-                port=settings.CHROMA_SERVER_PORT,
-                ssl=settings.CHROMA_SERVER_SSL,
-                headers=headers,
-                settings=ChromaSettings(anonymized_telemetry=False)
-            )
-            logger.info(f"Initialized ChromaDB HttpClient connected to {settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}")
+            try:
+                self.client = chromadb.HttpClient(
+                    host=settings.CHROMA_SERVER_HOST,
+                    port=settings.CHROMA_SERVER_PORT,
+                    ssl=settings.CHROMA_SERVER_SSL,
+                    headers=headers,
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+                logger.info(f"Initialized ChromaDB HttpClient connected to {settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}")
+            except Exception as e:
+                logger.error(f"[vector_store] Failed to connect to REMOTE_CHROMA host '{settings.CHROMA_SERVER_HOST}': {e}")
+                # Do NOT silently fallback to local ephemeral ChromaDB when remote is explicitly configured!
+                raise RuntimeError(
+                    f"Production ChromaDB connection to '{settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}' failed: {e}. "
+                    "Refusing to silently fallback to local ephemeral storage."
+                ) from e
         else:
+            logger.info(f"[vector_store] Mode: LOCAL_CHROMA (persist_dir={settings.CHROMA_PERSIST_DIR})")
+            Path(settings.CHROMA_PERSIST_DIR).mkdir(parents=True, exist_ok=True)
             self.client = chromadb.PersistentClient(
                 path=settings.CHROMA_PERSIST_DIR,
                 settings=ChromaSettings(anonymized_telemetry=False)
             )
             logger.info(f"Initialized ChromaDB PersistentClient at: {settings.CHROMA_PERSIST_DIR}")
+
         self.embedding_function = get_embedding_function()
         self._get_or_create_collection()
         self._initialized = True
 
     def _get_or_create_collection(self):
+        coll_name = settings.effective_collection_name
         try:
             # Check if embedding function has __call__ or embed_documents
             if hasattr(self.embedding_function, "__call__"):
                 self.collection = self.client.get_or_create_collection(
-                    name=COLLECTION_NAME,
+                    name=coll_name,
                     embedding_function=self.embedding_function
                 )
             else:
@@ -60,13 +72,34 @@ class VectorStoreManager:
                         return self.fn.embed_query(input)
 
                 self.collection = self.client.get_or_create_collection(
-                    name=COLLECTION_NAME,
+                    name=coll_name,
                     embedding_function=ChromaEmbeddingAdapter(self.embedding_function)
                 )
-            logger.info(f"Connected to ChromaDB collection: {COLLECTION_NAME}")
+            logger.info(f"Connected to ChromaDB collection: {coll_name}")
         except Exception as e:
-            logger.error(f"Error accessing collection {COLLECTION_NAME}: {e}")
+            logger.error(f"Error accessing collection {coll_name}: {e}")
             raise
+
+    def check_health(self) -> bool:
+        """Lightweight check to verify vector store connectivity without model inference."""
+        try:
+            if settings.is_remote_chroma:
+                if self.client is not None:
+                    self.client.heartbeat()
+                else:
+                    test_client = chromadb.HttpClient(
+                        host=settings.CHROMA_SERVER_HOST,
+                        port=settings.CHROMA_SERVER_PORT,
+                        ssl=settings.CHROMA_SERVER_SSL,
+                        settings=ChromaSettings(anonymized_telemetry=False)
+                    )
+                    test_client.heartbeat()
+                return True
+            else:
+                return Path(settings.CHROMA_PERSIST_DIR).exists()
+        except Exception as e:
+            logger.warning(f"Vector store health check notice: {e}")
+            return False
 
     def add_chunks_with_metadata(
         self,
@@ -209,12 +242,17 @@ class VectorStoreManager:
             return 0
 
     def reset_collection(self):
+        coll_name = settings.effective_collection_name
         try:
             self._ensure_initialized()
-            self.client.delete_collection(COLLECTION_NAME)
+            self.client.delete_collection(coll_name)
         except Exception:
             pass
         self._get_or_create_collection()
 
 
 vector_store = VectorStoreManager()
+
+
+def check_vector_store_health() -> bool:
+    return vector_store.check_health()

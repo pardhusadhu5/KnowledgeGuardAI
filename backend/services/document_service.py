@@ -235,9 +235,15 @@ class DocumentService:
         
         # Remove file from uploads if exists
         try:
-            file_path = UPLOAD_DIR / doc.filename
+            upload_path = Path(settings.UPLOAD_DIR)
+            file_path = upload_path / doc.filename
             if file_path.exists():
                 file_path.unlink()
+            for f in upload_path.glob(f"*_{doc.filename}"):
+                try:
+                    f.unlink()
+                except Exception:
+                    pass
         except Exception as e:
             logger.warning(f"Could not delete physical file for doc {doc_id}: {e}")
 
