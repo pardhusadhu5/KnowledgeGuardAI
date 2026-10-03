@@ -6,7 +6,7 @@ _ROOT_DIR = str(Path(__file__).resolve().parent.parent)
 if _ROOT_DIR not in sys.path:
     sys.path.insert(0, _ROOT_DIR)
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -135,14 +135,45 @@ def diagnostic_check(db: Session = Depends(get_db)):
 
 
 
+def _build_cors_headers(request: Request) -> dict:
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin:
+        is_allowed = (
+            origin in origins_set
+            or origin.endswith(".onrender.com")
+            or "localhost" in origin
+            or "127.0.0.1" in origin
+        )
+        if is_allowed:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+            headers["Access-Control-Allow-Methods"] = "*"
+            headers["Access-Control-Allow-Headers"] = "*"
+    return headers
+
+
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    headers = _build_cors_headers(request)
+    if exc.headers:
+        headers.update(exc.headers)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=headers
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "An unexpected error occurred during processing. Please review input or consult system logs."
-        }
+            "detail": f"An unexpected server error occurred: {str(exc)}"
+        },
+        headers=_build_cors_headers(request)
     )
 
 

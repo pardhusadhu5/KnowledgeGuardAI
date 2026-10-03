@@ -99,8 +99,9 @@ export const api = {
   uploadDocument: async (formData) => {
     const res = await apiClient.post('/documents/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined, // Allow browser to automatically set multipart/form-data with boundary
       },
+      timeout: 180000, // 3 minutes timeout for PDF processing, chunking, and ChromaDB vector indexing
     });
     return res.data;
   },

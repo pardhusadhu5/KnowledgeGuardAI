@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Upload, 
   FileText, 
@@ -26,6 +26,7 @@ const UPLOAD_STAGES = [
 ];
 
 export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
+  const uploadIntervalRef = useRef(null);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -57,6 +58,12 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
 
   useEffect(() => {
     fetchDocuments();
+    return () => {
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+        uploadIntervalRef.current = null;
+      }
+    };
   }, []);
 
   const handleFileChange = (e) => {
@@ -76,6 +83,12 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
       return;
     }
 
+    // Ensure any existing timer is cleared
+    if (uploadIntervalRef.current) {
+      clearInterval(uploadIntervalRef.current);
+      uploadIntervalRef.current = null;
+    }
+
     try {
       setUploading(true);
       setErrorMessage('');
@@ -83,7 +96,7 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
       setUploadStage(0);
 
       // Simulate visual progress stages
-      const interval = setInterval(() => {
+      uploadIntervalRef.current = setInterval(() => {
         setUploadStage((prev) => (prev < 4 ? prev + 1 : prev));
       }, 350);
 
@@ -95,7 +108,10 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
       formData.append('document_date', docDate);
 
       const res = await api.uploadDocument(formData);
-      clearInterval(interval);
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+        uploadIntervalRef.current = null;
+      }
       setUploadStage(5);
 
       setSuccessMessage(`Document '${res.filename}' successfully processed and indexed into ChromaDB!`);
@@ -107,8 +123,12 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
         setUploadStage(0);
       }, 1000);
     } catch (err) {
-      clearInterval(interval);
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+        uploadIntervalRef.current = null;
+      }
       setUploading(false);
+      setUploadStage(0);
       const detail = err.response?.data?.detail;
       if (detail) {
         setErrorMessage(detail);
@@ -118,6 +138,11 @@ export const KnowledgeBasePage = ({ onInvestigateTopic }) => {
         setErrorMessage('Network Error communicating with backend. If waking from cold sleep, please wait a moment and try again.');
       } else {
         setErrorMessage(err.message || 'Failed to process and index document.');
+      }
+    } finally {
+      if (uploadIntervalRef.current) {
+        clearInterval(uploadIntervalRef.current);
+        uploadIntervalRef.current = null;
       }
     }
   };

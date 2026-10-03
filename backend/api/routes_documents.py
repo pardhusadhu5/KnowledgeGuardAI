@@ -12,6 +12,7 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def upload_document(
     file: UploadFile = File(...),
     source: str = Form("Uploaded Document"),
