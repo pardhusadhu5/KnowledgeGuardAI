@@ -1,3 +1,10 @@
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from backend.database.db import SessionLocal
 from backend.services.investigation_service import investigation_service
 from backend.llm.client import llm_client

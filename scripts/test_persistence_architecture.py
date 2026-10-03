@@ -59,8 +59,8 @@ class TestPersistenceArchitecture(unittest.TestCase):
         )
         self.assertTrue(test_settings.is_postgres)
         self.assertEqual(test_settings.database_type, "postgresql")
-        # Ensure postgres:// is normalized to postgresql:// for SQLAlchemy
-        self.assertTrue(test_settings.effective_database_url.startswith("postgresql://"))
+        # Ensure postgres:// is normalized to postgresql/postgresql+psycopg2 for SQLAlchemy
+        self.assertTrue(test_settings.effective_database_url.startswith("postgresql"))
 
         # Verify safe storage summary masks credentials
         summary = test_settings.get_safe_storage_summary()
@@ -74,10 +74,10 @@ class TestPersistenceArchitecture(unittest.TestCase):
             CHROMA_SERVER_PORT=8000
         )
         self.assertTrue(test_settings.is_remote_chroma)
-        self.assertEqual(test_settings.vector_store_type, "remote_chroma")
+        self.assertEqual(test_settings.vector_store_type, "production_chroma")
 
         summary = test_settings.get_safe_storage_summary()
-        self.assertIn("Remote ChromaDB", summary["vector_store_description"])
+        self.assertIn("Production ChromaDB", summary["vector_store_description"])
         self.assertIn("chroma.invalid-nonexistent-domain.com:8000", summary["vector_store_description"])
 
     def test_D_and_E_document_upload_and_persistence(self):

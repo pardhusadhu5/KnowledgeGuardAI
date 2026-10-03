@@ -71,11 +71,27 @@ def on_startup():
     storage_summary = settings.get_safe_storage_summary()
     logger.info("=" * 60)
     logger.info("KnowledgeGuard AI Storage Configuration:")
-    logger.info(f"  Database:       {storage_summary['database_description']}")
-    logger.info(f"  Vector Store:   {storage_summary['vector_store_description']}")
-    logger.info(f"  Upload Storage: {storage_summary['upload_storage']}")
-    logger.info(f"  Collection:     {storage_summary['collection_name']}")
+    logger.info(f"  Database backend: {storage_summary['database_type'].upper()}")
+    logger.info(f"  Database host:    {storage_summary['database_description']}")
+    logger.info(f"  Vector backend:   {storage_summary['vector_store_type']}")
+    logger.info(f"  Vector host:      {storage_summary['vector_store_description']}")
+    logger.info(f"  Chroma collection:{storage_summary['collection_name']}")
+    logger.info(f"  Upload Storage:   {storage_summary['upload_storage']}")
     logger.info("=" * 60)
+
+    # Fail fast in production if required persistent production storage is unconfigured
+    if settings.is_production:
+        if not settings.DATABASE_URL:
+            raise RuntimeError(
+                "Configuration Error: DATABASE_URL is not configured in production environment. "
+                "KnowledgeGuard AI requires a persistent PostgreSQL (e.g. Neon) database connection."
+            )
+        if not settings.CHROMA_SERVER_HOST:
+            raise RuntimeError(
+                "Configuration Error: CHROMA_SERVER_HOST is not configured in production environment. "
+                "KnowledgeGuard AI requires a production ChromaDB server in production mode."
+            )
+
     init_db()
     logger.info(f"KnowledgeGuard AI backend initialized successfully. Environment: {settings.ENV}")
 

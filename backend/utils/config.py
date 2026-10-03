@@ -47,8 +47,8 @@ class Settings(BaseSettings):
 
     # Chroma & Vector Storage Settings
     CHROMA_PERSIST_DIR: str = str(DEFAULT_CHROMA_DIR)
-    CHROMA_COLLECTION_NAME: str = "knowledgeguard_documents"
-    COLLECTION_NAME: str = "knowledgeguard_documents"  # backwards compatibility alias
+    CHROMA_COLLECTION_NAME: str = "knowledgeguard"
+    COLLECTION_NAME: str = "knowledgeguard"  # backwards compatibility alias
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
     # Optional Chroma HttpClient / Cloud settings for production
@@ -70,22 +70,45 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,https://knowledgeguardai-1.onrender.com,https://knowledgeguardai.onrender.com,https://knowledgeguard-frontend.onrender.com"
 
     @property
+    def is_production(self) -> bool:
+        env_val = (self.ENV or "").strip().lower()
+        return env_val in ("production", "prod") or bool(os.environ.get("RENDER"))
+
+    @property
     def effective_collection_name(self) -> str:
-        return self.CHROMA_COLLECTION_NAME or self.COLLECTION_NAME or "knowledgeguard_documents"
+        return self.CHROMA_COLLECTION_NAME or self.COLLECTION_NAME or "knowledgeguard"
 
     @property
     def effective_database_url(self) -> str:
         raw = (self.DATABASE_URL or "").strip()
         if not raw:
+            if self.is_production:
+                raise RuntimeError(
+                    "Configuration Error: DATABASE_URL must be configured in production environment. "
+                    "KnowledgeGuard AI requires a persistent PostgreSQL (e.g., Neon) database connection."
+                )
             return f"sqlite:///{SQLITE_DB_PATH}"
+
         if raw.startswith("postgres://"):
-            return raw.replace("postgres://", "postgresql://", 1)
+            raw = raw.replace("postgres://", "postgresql://", 1)
+
+        # In SQLAlchemy 2.0, postgresql:// defaults to psycopg (v3). If only psycopg2 is installed,
+        # normalize postgresql:// to postgresql+psycopg2://
+        if raw.startswith("postgresql://") and not raw.startswith("postgresql+"):
+            try:
+                import psycopg  # noqa: F401
+            except ImportError:
+                raw = raw.replace("postgresql://", "postgresql+psycopg2://", 1)
+
         return raw
 
     @property
     def is_postgres(self) -> bool:
-        url = self.effective_database_url.lower()
-        return url.startswith("postgresql://") or url.startswith("postgres://")
+        try:
+            url = self.effective_database_url.lower()
+            return url.startswith("postgresql://") or url.startswith("postgres://") or url.startswith("postgresql+")
+        except RuntimeError:
+            return False
 
     @property
     def database_type(self) -> str:
@@ -97,7 +120,7 @@ class Settings(BaseSettings):
 
     @property
     def vector_store_type(self) -> str:
-        return "remote_chroma" if self.is_remote_chroma else "local_chroma"
+        return "production_chroma" if self.is_remote_chroma else "local_chroma"
 
     def get_safe_storage_summary(self) -> dict:
         if self.is_postgres:
@@ -108,7 +131,7 @@ class Settings(BaseSettings):
             db_desc = f"SQLite ({SQLITE_DB_PATH})"
 
         if self.is_remote_chroma:
-            vec_desc = f"Remote ChromaDB ({self.CHROMA_SERVER_HOST}:{self.CHROMA_SERVER_PORT}, ssl={self.CHROMA_SERVER_SSL})"
+            vec_desc = f"Production ChromaDB ({self.CHROMA_SERVER_HOST}:{self.CHROMA_SERVER_PORT}, ssl={self.CHROMA_SERVER_SSL})"
         else:
             vec_desc = f"Local ChromaDB ({self.CHROMA_PERSIST_DIR})"
 

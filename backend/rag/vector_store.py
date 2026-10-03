@@ -21,7 +21,7 @@ class VectorStoreManager:
             return
 
         if settings.is_remote_chroma:
-            logger.info(f"[vector_store] Mode: REMOTE_CHROMA (host={settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}, ssl={settings.CHROMA_SERVER_SSL})")
+            logger.info(f"[vector_store] Mode: PRODUCTION_CHROMA (host={settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}, ssl={settings.CHROMA_SERVER_SSL})")
             headers = {"X-Chroma-Token": settings.CHROMA_AUTH_TOKEN} if settings.CHROMA_AUTH_TOKEN else None
             try:
                 self.client = chromadb.HttpClient(
@@ -33,13 +33,19 @@ class VectorStoreManager:
                 )
                 logger.info(f"Initialized ChromaDB HttpClient connected to {settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}")
             except Exception as e:
-                logger.error(f"[vector_store] Failed to connect to REMOTE_CHROMA host '{settings.CHROMA_SERVER_HOST}': {e}")
+                logger.error(f"[vector_store] Failed to connect to PRODUCTION_CHROMA host '{settings.CHROMA_SERVER_HOST}': {e}")
                 # Do NOT silently fallback to local ephemeral ChromaDB when remote is explicitly configured!
                 raise RuntimeError(
                     f"Production ChromaDB connection to '{settings.CHROMA_SERVER_HOST}:{settings.CHROMA_SERVER_PORT}' failed: {e}. "
                     "Refusing to silently fallback to local ephemeral storage."
                 ) from e
         else:
+            if settings.is_production:
+                raise RuntimeError(
+                    "Configuration Error: CHROMA_SERVER_HOST must be configured in production environment. "
+                    "KnowledgeGuard AI requires a production ChromaDB server in production mode. "
+                    "Refusing to silently fallback to local ephemeral storage."
+                )
             logger.info(f"[vector_store] Mode: LOCAL_CHROMA (persist_dir={settings.CHROMA_PERSIST_DIR})")
             Path(settings.CHROMA_PERSIST_DIR).mkdir(parents=True, exist_ok=True)
             self.client = chromadb.PersistentClient(
@@ -83,14 +89,20 @@ class VectorStoreManager:
     def check_health(self) -> bool:
         """Lightweight check to verify vector store connectivity without model inference."""
         try:
+            if settings.is_production and not settings.is_remote_chroma:
+                logger.error("Health check failed: CHROMA_SERVER_HOST is not configured in production mode.")
+                return False
+
             if settings.is_remote_chroma:
                 if self.client is not None:
                     self.client.heartbeat()
                 else:
+                    headers = {"X-Chroma-Token": settings.CHROMA_AUTH_TOKEN} if settings.CHROMA_AUTH_TOKEN else None
                     test_client = chromadb.HttpClient(
                         host=settings.CHROMA_SERVER_HOST,
                         port=settings.CHROMA_SERVER_PORT,
                         ssl=settings.CHROMA_SERVER_SSL,
+                        headers=headers,
                         settings=ChromaSettings(anonymized_telemetry=False)
                     )
                     test_client.heartbeat()

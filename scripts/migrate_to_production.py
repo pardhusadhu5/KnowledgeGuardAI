@@ -26,6 +26,12 @@ _ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(_ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(_ROOT_DIR))
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from sqlalchemy import create_engine, func, text, inspect
 from sqlalchemy.orm import sessionmaker
 import chromadb
@@ -137,17 +143,22 @@ def run_migration():
             path=args.source_chroma_dir,
             settings=ChromaSettings(anonymized_telemetry=False)
         )
-        src_collection = src_client.get_or_create_collection(name=args.collection_name)
+        existing_colls = [c.name for c in src_client.list_collections()]
+        src_coll_name = args.collection_name
+        if src_coll_name not in existing_colls and existing_colls:
+            src_coll_name = existing_colls[0]
+            print(f"[Info] Collection '{args.collection_name}' not found locally. Using detected collection '{src_coll_name}'.")
+        src_collection = src_client.get_collection(name=src_coll_name)
         src_chroma_count = src_collection.count()
     except Exception as e:
         print(f"[Warning] Could not inspect source Chroma collection: {e}")
 
     print("\n[PRE-MIGRATION COUNTS — SOURCE DATA]")
-    print(f"  • Documents:           {src_docs_count}")
-    print(f"  • Knowledge Chunks:    {src_chunks_count}")
-    print(f"  • Investigations:      {src_invs_count}")
-    print(f"  • Evidence Records:    {src_ev_count}")
-    print(f"  • Chroma Vectors:      {src_chroma_count}")
+    print(f"  * Documents:           {src_docs_count}")
+    print(f"  * Knowledge Chunks:    {src_chunks_count}")
+    print(f"  * Investigations:      {src_invs_count}")
+    print(f"  * Evidence Records:    {src_ev_count}")
+    print(f"  * Chroma Vectors:      {src_chroma_count}")
 
     if not args.target_db:
         print("\n[Notice] No --target-db provided. Relational database migration skipped.")
@@ -159,6 +170,11 @@ def run_migration():
         target_db_url = args.target_db
         if target_db_url.startswith("postgres://"):
             target_db_url = target_db_url.replace("postgres://", "postgresql://", 1)
+        if target_db_url.startswith("postgresql://") and not target_db_url.startswith("postgresql+"):
+            try:
+                import psycopg  # noqa: F401
+            except ImportError:
+                target_db_url = target_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
         target_engine = create_engine(
             target_db_url,
@@ -184,10 +200,10 @@ def run_migration():
             pass
 
         print(f"\n[PRE-MIGRATION COUNTS — TARGET DB ({mask_url(target_db_url)})]")
-        print(f"  • Documents:           {target_docs_count_pre}")
-        print(f"  • Knowledge Chunks:    {target_chunks_count_pre}")
-        print(f"  • Investigations:      {target_invs_count_pre}")
-        print(f"  • Evidence Records:    {target_ev_count_pre}")
+        print(f"  * Documents:           {target_docs_count_pre}")
+        print(f"  * Knowledge Chunks:    {target_chunks_count_pre}")
+        print(f"  * Investigations:      {target_invs_count_pre}")
+        print(f"  * Evidence Records:    {target_ev_count_pre}")
 
         if args.dry_run:
             print("\n[DRY RUN SUMMARY] Simulation complete. No changes were committed to target store.")
@@ -196,88 +212,104 @@ def run_migration():
         # LIVE MIGRATION EXECUTION
         print("\n[Step 1/5] Initializing target database schema...")
         Base.metadata.create_all(bind=target_engine)
-        print("  ✓ Schema tables verified and ready on target database.")
+        print("  [OK] Schema tables verified and ready on target database.")
 
-        print("\n[Step 2/5] Migrating documents and metadata...")
+        print("\n[Step 2/5] Migrating documents and metadata...", flush=True)
         src_docs = source_db.query(DocumentEntity).all()
-        doc_id_map = {}
-        for d in src_docs:
-            existing = target_db.query(DocumentEntity).filter(DocumentEntity.id == d.id).first()
-            if not existing:
-                new_doc = DocumentEntity(
-                    id=d.id,
-                    filename=d.filename,
-                    source=d.source,
-                    version=d.version,
-                    topic=d.topic,
-                    document_date=d.document_date,
-                    uploaded_at=d.uploaded_at,
-                    status=d.status
-                )
-                target_db.add(new_doc)
-            doc_id_map[d.id] = d.id
-        target_db.commit()
-        print(f"  ✓ Migrated {len(src_docs)} document records.")
+        existing_doc_ids = set(r[0] for r in target_db.query(DocumentEntity.id).all())
+        new_docs = [
+            DocumentEntity(
+                id=d.id,
+                filename=d.filename,
+                source=d.source,
+                version=d.version,
+                topic=d.topic,
+                document_date=d.document_date,
+                uploaded_at=d.uploaded_at,
+                status=d.status
+            )
+            for d in src_docs if d.id not in existing_doc_ids
+        ]
+        if new_docs:
+            target_db.add_all(new_docs)
+            target_db.commit()
+        print(f"  [OK] Migrated {len(new_docs)} new document records (Total: {len(src_docs)}).", flush=True)
 
-        print("\n[Step 3/5] Migrating knowledge chunks...")
+        print("\n[Step 3/5] Migrating knowledge chunks...", flush=True)
         src_chunks = source_db.query(KnowledgeChunkEntity).all()
-        for c in src_chunks:
-            existing = target_db.query(KnowledgeChunkEntity).filter(KnowledgeChunkEntity.id == c.id).first()
-            if not existing:
-                new_chunk = KnowledgeChunkEntity(
-                    id=c.id,
-                    document_id=c.document_id,
-                    chunk_index=c.chunk_index,
-                    page=getattr(c, "page", 1) or 1,
-                    chunk_text=c.chunk_text,
-                    metadata_json=c.metadata_json
-                )
-                target_db.add(new_chunk)
-        target_db.commit()
-        print(f"  ✓ Migrated {len(src_chunks)} knowledge chunk records.")
+        existing_chunk_ids = set(r[0] for r in target_db.query(KnowledgeChunkEntity.id).all())
+        chunks_to_add = [
+            KnowledgeChunkEntity(
+                id=c.id,
+                document_id=c.document_id,
+                chunk_index=c.chunk_index,
+                page=getattr(c, "page", 1) or 1,
+                chunk_text=c.chunk_text,
+                metadata_json=c.metadata_json
+            )
+            for c in src_chunks if c.id not in existing_chunk_ids
+        ]
+        for i in range(0, len(chunks_to_add), 500):
+            target_db.add_all(chunks_to_add[i:i + 500])
+            target_db.commit()
+            print(f"  Committed chunk batch {i + 1}–{min(i + 500, len(chunks_to_add))} / {len(chunks_to_add)}", flush=True)
+        print(f"  [OK] Migrated {len(chunks_to_add)} new knowledge chunk records (Total: {len(src_chunks)}).", flush=True)
 
-        print("\n[Step 4/5] Migrating investigations and evidence audit history...")
+        print("\n[Step 4/5] Migrating investigations and evidence audit history...", flush=True)
         src_invs = source_db.query(InvestigationEntity).all()
-        for inv in src_invs:
-            existing = target_db.query(InvestigationEntity).filter(InvestigationEntity.id == inv.id).first()
-            if not existing:
-                new_inv = InvestigationEntity(
-                    id=inv.id,
-                    claim=inv.claim,
-                    classification=inv.classification,
-                    explanation=inv.explanation,
-                    confidence=inv.confidence,
-                    recommendation=inv.recommendation,
-                    human_verification_required=inv.human_verification_required,
-                    human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
-                    execution_time_ms=getattr(inv, "execution_time_ms", 0.0) or 0.0,
-                    research_occurred=getattr(inv, "research_occurred", False) or False,
-                    created_at=inv.created_at,
-                    metadata_json=inv.metadata_json
-                )
-                target_db.add(new_inv)
-        target_db.commit()
+        existing_inv_ids = set(r[0] for r in target_db.query(InvestigationEntity.id).all())
+        invs_to_add = [
+            InvestigationEntity(
+                id=inv.id,
+                claim=inv.claim,
+                classification=inv.classification,
+                explanation=inv.explanation,
+                confidence=inv.confidence,
+                recommendation=inv.recommendation,
+                human_verification_required=inv.human_verification_required,
+                human_review_status=getattr(inv, "human_review_status", "Pending Review") or "Pending Review",
+                execution_time_ms=getattr(inv, "execution_time_ms", 0.0) or 0.0,
+                research_occurred=getattr(inv, "research_occurred", False) or False,
+                created_at=inv.created_at,
+                metadata_json=inv.metadata_json
+            )
+            for inv in src_invs if inv.id not in existing_inv_ids
+        ]
+        if invs_to_add:
+            target_db.add_all(invs_to_add)
+            target_db.commit()
 
         src_evs = source_db.query(EvidenceEntity).all()
+        existing_ev_ids = set(r[0] for r in target_db.query(EvidenceEntity.id).all())
+        all_target_doc_ids = set(r[0] for r in target_db.query(DocumentEntity.id).all())
+        all_target_chunk_ids = set(r[0] for r in target_db.query(KnowledgeChunkEntity.id).all())
+        all_target_inv_ids = set(r[0] for r in target_db.query(InvestigationEntity.id).all())
+
+        evs_to_add = []
         for ev in src_evs:
-            existing = target_db.query(EvidenceEntity).filter(EvidenceEntity.id == ev.id).first()
-            if not existing:
-                new_ev = EvidenceEntity(
-                    id=ev.id,
-                    investigation_id=ev.investigation_id,
-                    document_id=ev.document_id,
-                    chunk_id=ev.chunk_id,
-                    page=getattr(ev, "page", 1) or 1,
-                    evidence_text=ev.evidence_text,
-                    relevance_score=ev.relevance_score,
-                    source=ev.source,
-                    version=ev.version,
-                    date=ev.date,
-                    is_stored_knowledge=ev.is_stored_knowledge
-                )
-                target_db.add(new_ev)
-        target_db.commit()
-        print(f"  ✓ Migrated {len(src_invs)} investigations and {len(src_evs)} evidence records.")
+            if ev.id in existing_ev_ids or ev.investigation_id not in all_target_inv_ids:
+                continue
+            doc_id_val = ev.document_id if ev.document_id in all_target_doc_ids else None
+            chunk_id_val = ev.chunk_id if ev.chunk_id in all_target_chunk_ids else None
+            new_ev = EvidenceEntity(
+                id=ev.id,
+                investigation_id=ev.investigation_id,
+                document_id=doc_id_val,
+                chunk_id=chunk_id_val,
+                page=getattr(ev, "page", 1) or 1,
+                evidence_text=ev.evidence_text,
+                relevance_score=ev.relevance_score,
+                source=ev.source,
+                version=ev.version,
+                date=ev.date,
+                is_stored_knowledge=ev.is_stored_knowledge
+            )
+            evs_to_add.append(new_ev)
+
+        for i in range(0, len(evs_to_add), 500):
+            target_db.add_all(evs_to_add[i:i + 500])
+            target_db.commit()
+        print(f"  [OK] Migrated {len(evs_to_add)} investigations and evidence records.", flush=True)
 
         # If PostgreSQL, reset sequence auto-increments
         if "postgresql" in target_db_url:
@@ -287,7 +319,7 @@ def run_migration():
                         conn.execute(text(f"SELECT setval(pg_get_serial_sequence('{tbl}', 'id'), COALESCE(MAX(id), 1)) FROM {tbl}"))
                     except Exception:
                         pass
-            print("  ✓ Synchronized PostgreSQL sequence generators.")
+            print("  [OK] Synchronized PostgreSQL sequence generators.")
 
     # Step 5: Migrate Vector Embeddings to Target ChromaDB
     if args.target_chroma_host and src_collection and src_chroma_count > 0:
@@ -316,7 +348,7 @@ def run_migration():
             b_metas = all_records["metadatas"][i:i + batch_size]
             target_collection.upsert(ids=b_ids, documents=b_docs, metadatas=b_metas)
             print(f"  Indexed vector batch {i + 1}–{min(i + batch_size, total_vectors)} / {total_vectors}")
-        print("  ✓ Vector embedding migration complete.")
+        print("  [OK] Vector embedding migration complete.")
 
     # Migrate uploaded PDF/TXT files to persistent upload dir if distinct
     target_up_path = Path(args.target_upload_dir)
@@ -329,7 +361,7 @@ def run_migration():
             if not dest_file.exists():
                 shutil.copy2(f, dest_file)
                 copied_files += 1
-        print(f"\n  ✓ Synced {copied_files} physical upload files to {target_up_path}")
+        print(f"\n  [OK] Synced {copied_files} physical upload files to {target_up_path}")
 
     # Post-Migration Report
     print("\n" + "=" * 70)
@@ -342,10 +374,10 @@ def run_migration():
         target_ev_count_post = target_db.query(func.count(EvidenceEntity.id)).scalar() or 0
 
         print(" Target PostgreSQL Database:")
-        print(f"  • Documents:           {target_docs_count_post}  (Source: {src_docs_count})")
-        print(f"  • Knowledge Chunks:    {target_chunks_count_post}  (Source: {src_chunks_count})")
-        print(f"  • Investigations:      {target_invs_count_post}  (Source: {src_invs_count})")
-        print(f"  • Evidence Records:    {target_ev_count_post}  (Source: {src_ev_count})")
+        print(f"  * Documents:           {target_docs_count_post}  (Source: {src_docs_count})")
+        print(f"  * Knowledge Chunks:    {target_chunks_count_post}  (Source: {src_chunks_count})")
+        print(f"  * Investigations:      {target_invs_count_post}  (Source: {src_invs_count})")
+        print(f"  * Evidence Records:    {target_ev_count_post}  (Source: {src_ev_count})")
 
     if args.target_chroma_host:
         target_chroma_count_post = target_collection.count() if 'target_collection' in locals() else 0
