@@ -6,14 +6,17 @@ _ROOT_DIR = str(Path(__file__).resolve().parent.parent)
 if _ROOT_DIR not in sys.path:
     sys.path.insert(0, _ROOT_DIR)
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from backend.utils.config import settings
 from backend.utils.logger import get_logger
-from backend.database.db import init_db, engine, is_sqlite
+from backend.database.db import init_db, engine, is_sqlite, get_db
+from backend.models.entities import DocumentEntity
+from backend.rag.vector_store import vector_store
 from backend.api import api_router
 
 logger = get_logger("main")
@@ -81,6 +84,46 @@ def health_check():
     return {
         "status": "healthy",
         "service": "KnowledgeGuard AI backend"
+    }
+
+
+@app.get("/diagnostic", tags=["Health"])
+def diagnostic_check(db: Session = Depends(get_db)):
+    """System diagnostic endpoint reporting database and vector store persistence status."""
+    db_raw = str(settings.DATABASE_URL)
+    db_exists = False
+    doc_count_sqlite = 0
+    db_display_path = db_raw
+    try:
+        doc_count_sqlite = db.query(DocumentEntity).count()
+        if is_sqlite:
+            clean_path = db_raw.replace("sqlite:///", "").replace("sqlite://", "")
+            db_exists = Path(clean_path).exists()
+            db_display_path = clean_path
+        else:
+            db_exists = True
+            db_display_path = "postgresql://[credentials_hidden]@" + db_raw.split("@")[-1] if "@" in db_raw else "postgresql://[external]"
+    except Exception as e:
+        logger.warning(f"Diagnostic DB check notice: {e}")
+        db_display_path = "unknown"
+
+    chroma_path = str(settings.CHROMA_PERSIST_DIR)
+    chroma_exists = Path(chroma_path).exists()
+    chroma_collection = settings.COLLECTION_NAME
+    chroma_vector_count = 0
+    try:
+        chroma_vector_count = vector_store.count()
+    except Exception as e:
+        logger.warning(f"Diagnostic Chroma count notice: {e}")
+
+    return {
+        "database_path": db_display_path,
+        "database_exists": db_exists,
+        "document_count_sqlite": doc_count_sqlite,
+        "chroma_path": chroma_path,
+        "chroma_exists": chroma_exists,
+        "chroma_collection": chroma_collection,
+        "chroma_vector_count": chroma_vector_count
     }
 
 
